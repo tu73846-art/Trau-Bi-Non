@@ -49,6 +49,17 @@ public class MainActivity extends Activity {
       });
     }
 
+    @JavascriptInterface public void copyText(String value) {
+      runOnUiThread(() -> {
+        android.content.ClipboardManager clipboard =
+          (android.content.ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
+        if (clipboard != null) {
+          clipboard.setPrimaryClip(android.content.ClipData.newPlainText("AutoCheat", value));
+          Toast.makeText(MainActivity.this, "Đã sao chép mã Cheat.", Toast.LENGTH_SHORT).show();
+        }
+      });
+    }
+
     @JavascriptInterface public void openRom(String value) {
       runOnUiThread(() -> launchRom(Uri.parse(value)));
     }
