@@ -21,6 +21,7 @@
 
 #define PORT "android"
 #include <stdio.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -34,6 +35,19 @@ static void mSDLAndroidRunloop(struct mSDLRenderer* renderer, void* user) {
 
 	while (mCoreThreadIsActive(context)) {
 		while (SDL_PollEvent(&event)) {
+			if (event.type == SDL_USEREVENT &&
+			    (event.user.code == TBN_EVENT_SAVE_STATE || event.user.code == TBN_EVENT_LOAD_STATE)) {
+				int slot = (int) (intptr_t) event.user.data1;
+				if (slot > 0 && slot <= 9999) {
+					mCoreThreadInterrupt(context);
+					bool saved = event.user.code == TBN_EVENT_SAVE_STATE
+					    ? mCoreSaveState(context->core, slot, SAVESTATE_SAVEDATA | SAVESTATE_SCREENSHOT | SAVESTATE_RTC)
+					    : mCoreLoadState(context->core, slot, SAVESTATE_SCREENSHOT | SAVESTATE_RTC);
+					mCoreThreadContinue(context);
+					SDL_Log("%s state slot %d", saved ? "Completed" : "Failed", slot);
+				}
+				continue;
+			}
 			mAndroidOverlayHandleEvent(&event);
 			mSDLHandleEvent(context, &renderer->player, &event);
 		}
