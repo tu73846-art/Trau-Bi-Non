@@ -46,6 +46,14 @@ public class MainActivity extends Activity {
       });
     }
 
+    @JavascriptInterface public boolean isMyBoyInstalled() {
+      try {
+        return getPackageManager().getPackageInfo(MYBOY_PACKAGE, 0) != null;
+      } catch (Exception ignored) {
+        return false;
+      }
+    }
+
     @JavascriptInterface public void openMyBoy() {
       runOnUiThread(() -> {
         Intent i = getPackageManager().getLaunchIntentForPackage(MYBOY_PACKAGE);
@@ -59,10 +67,25 @@ public class MainActivity extends Activity {
     @JavascriptInterface public void openRomInMyBoy(String value) {
       runOnUiThread(() -> {
         try {
+          if (!isMyBoyInstalled()) {
+            Toast.makeText(MainActivity.this, "Chưa cài My Boy! Hãy cài My Boy rồi thử lại.", Toast.LENGTH_LONG).show();
+            return;
+          }
+          if (value == null || value.trim().isEmpty()) {
+            Toast.makeText(MainActivity.this, "Chưa chọn ROM để mở trong My Boy!.", Toast.LENGTH_LONG).show();
+            return;
+          }
+          Uri romUri = Uri.parse(value);
           Intent i = new Intent(Intent.ACTION_VIEW);
-          i.setDataAndType(Uri.parse(value), "application/octet-stream");
+          i.setDataAndType(romUri, "application/octet-stream");
           i.setPackage(MYBOY_PACKAGE);
+          i.addCategory(Intent.CATEGORY_DEFAULT);
           i.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+          i.setClipData(android.content.ClipData.newUri(getContentResolver(), "GBA ROM", romUri));
+          if (i.resolveActivity(getPackageManager()) == null) {
+            Toast.makeText(MainActivity.this, "My Boy! không nhận được tệp ROM này. Hãy thử mở ROM bằng mGBA.", Toast.LENGTH_LONG).show();
+            return;
+          }
           startActivity(i);
         } catch (ActivityNotFoundException e) {
           Toast.makeText(MainActivity.this, "My Boy! chưa cài hoặc không nhận được tệp ROM này.", Toast.LENGTH_LONG).show();
