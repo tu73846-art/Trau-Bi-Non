@@ -56,6 +56,22 @@ public class MainActivity extends Activity {
       });
     }
 
+    @JavascriptInterface public void openRomInMyBoy(String value) {
+      runOnUiThread(() -> {
+        try {
+          Intent i = new Intent(Intent.ACTION_VIEW);
+          i.setDataAndType(Uri.parse(value), "application/octet-stream");
+          i.setPackage(MYBOY_PACKAGE);
+          i.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+          startActivity(i);
+        } catch (ActivityNotFoundException e) {
+          Toast.makeText(MainActivity.this, "My Boy! chưa cài hoặc không nhận được tệp ROM này.", Toast.LENGTH_LONG).show();
+        } catch (Exception e) {
+          Toast.makeText(MainActivity.this, "Không mở được ROM trong My Boy!: " + e.getMessage(), Toast.LENGTH_LONG).show();
+        }
+      });
+    }
+
     @JavascriptInterface public void copyText(String value) {
       runOnUiThread(() -> {
         android.content.ClipboardManager clipboard =
