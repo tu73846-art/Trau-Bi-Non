@@ -151,16 +151,16 @@ function importCheatFile(file){
    }catch(e){$('hint').textContent='Tệp JSON không hợp lệ hoặc sai cấu trúc.';return}
   }else{
    let name='',codes=[];
-   const flush=()=>{if(codes.length)imported.push({name:name||('Cheat '+(imported.length+1)),code:codes.join('\\n'),enabled:true});codes=[]};
-   for(const line of raw.split(/\\r?\\n/)){
-    const t=line.trim();
-    if(!t)continue;
-    const heading=t.match(/^(?:\\[([^\\]]+)\\]|#\\s*(.+)|(?:Name|Cheat)\\s*[:=]\\s*(.+))$/i);
-    if(heading){flush();name=(heading[1]||heading[2]||heading[3]||'').trim();continue}
-    const numbered=t.match(/^\\d+[.)]\\s*(.+?)\\s*[-–]\\s*(?:GameShark(?:\\s*\\/\\s*Action Replay)?|Action Replay|CodeBreaker)\\s*$/i);
-    if(numbered){flush();name=numbered[1].trim();continue}
-    if(/^[0-9a-f]{8}\\s+[0-9a-f]{4,8}$/i.test(t)){codes.push(t);continue}
-    if(/^(?:;|\\*|\\/\\/)/.test(t))continue;
+    const flush=()=>{if(codes.length)imported.push({name:name||('Cheat '+(imported.length+1)),code:codes.join('\n'),enabled:true});codes=[]};
+    for(const line of raw.split(/\r?\n/)){
+     const t=line.trim();
+     if(!t)continue;
+     const heading=t.match(/^(?:\[([^\]]+)\]|#\s*(.+)|(?:Name|Cheat)\s*[:=]\s*(.+))$/i);
+     if(heading){flush();name=(heading[1]||heading[2]||heading[3]||'').trim();continue}
+     const numbered=t.match(/^\d+[.)]\s*(.+?)\s*[-–]\s*(?:GameShark(?:\s*\/\s*Action Replay)?|Action Replay|CodeBreaker)\s*$/i);
+     if(numbered){flush();name=numbered[1].trim();continue}
+     if(/^[0-9a-f]{8}\s+[0-9a-f]{4,8}$/i.test(t)){codes.push(t);continue}
+     if(/^(?:;|\*|\/\/)/.test(t))continue;
    }
    flush();
    imported=imported.map((x,i)=>normalizeCheatEntry(x,i)).filter(x=>x&&validCheatCode(x.code));
