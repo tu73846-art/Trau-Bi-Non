@@ -144,14 +144,14 @@ function exportBackup(){
  setTimeout(()=>URL.revokeObjectURL(url),1000);$('hint').textContent='Đã xuất bản sao lưu thư viện, AutoCheat và cài đặt.';
 }
 function importBackupFile(file){
- if(!file)return;const reader=new FileReader();
+ if(!file)return;if(!confirm('Khôi phục sẽ thay thế thư viện game, AutoCheat và cài đặt hiện tại. Tiếp tục?')){$('backupImport').value='';return}const reader=new FileReader();
  reader.onload=()=>{
   try{
    const data=JSON.parse(String(reader.result||''));
    if(!data||data.app!=='TrauBiNon'||!Array.isArray(data.games)||!data.cheats||typeof data.cheats!=='object'||Array.isArray(data.cheats))throw new Error('Sai định dạng bản sao lưu');
    const nextGames=data.games.filter(g=>g&&typeof g.name==='string'&&typeof g.uri==='string'&&g.uri.trim()).map(g=>({name:g.name,uri:g.uri}));
    const nextCheats={};Object.keys(data.cheats).forEach(k=>{const rows=Array.isArray(data.cheats[k])?data.cheats[k]:[];nextCheats[k]=rows.map((x,i)=>normalizeCheatEntry(x,i)).filter(x=>x&&validCheatCode(x.code));});
-   const nextGraphics=data.graphics&&typeof data.graphics==='object'?{quality:String(data.graphics.quality||'normal'),fps:['30','60'].includes(String(data.graphics.fps))?String(data.graphics.fps):'60'}:{quality:'normal',fps:'60'};
+   const nextGraphics=data.graphics&&typeof data.graphics==='object'?{quality:['Tiêu chuẩn','Lọc hình ảnh (mGBA)'].includes(String(data.graphics.quality))?String(data.graphics.quality):'Tiêu chuẩn',fps:['30 FPS','60 FPS'].includes(String(data.graphics.fps))?String(data.graphics.fps):'60 FPS'}:{quality:'Tiêu chuẩn',fps:'60 FPS'};
    const keys=['games','cheats','graphics'],values=[nextGames,nextCheats,nextGraphics],old=keys.map(k=>localStorage.getItem(k));
    try{keys.forEach((k,i)=>localStorage.setItem(k,JSON.stringify(values[i])))}catch(writeError){keys.forEach((k,i)=>{try{if(old[i]===null)localStorage.removeItem(k);else localStorage.setItem(k,old[i])}catch(ignore){}});throw new Error('Không đủ bộ nhớ để khôi phục; dữ liệu cũ được giữ nguyên.')}
    games=nextGames;cheats=nextCheats;index=0;renderGames();$('hint').textContent='Đã khôi phục '+games.length+' game và kho AutoCheat.';
