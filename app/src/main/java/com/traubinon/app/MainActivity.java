@@ -146,13 +146,27 @@ public class MainActivity extends Activity {
     }
     String name = displayName(uri);
     File target = new File(folder, name);
-    try (InputStream in = getContentResolver().openInputStream(uri);
-         FileOutputStream out = new FileOutputStream(target)) {
-      if (in == null) throw new IllegalStateException("Không đọc được ROM");
-      byte[] buffer = new byte[8192];
-      int count;
-      while ((count = in.read(buffer)) != -1) out.write(buffer, 0, count);
-      out.flush();
+    File temp = new File(folder, name + ".part");
+    File backup = new File(folder, name + ".previous");
+    try {
+      if (temp.exists() && !temp.delete()) throw new IllegalStateException("Không dọn được tệp ROM tạm");
+      try (InputStream in = getContentResolver().openInputStream(uri);
+           FileOutputStream out = new FileOutputStream(temp, false)) {
+        if (in == null) throw new IllegalStateException("Không đọc được ROM");
+        byte[] buffer = new byte[8192];
+        int count;
+        while ((count = in.read(buffer)) != -1) out.write(buffer, 0, count);
+        out.flush();
+        out.getFD().sync();
+      }
+      if (backup.exists() && !backup.delete()) throw new IllegalStateException("Không dọn được bản ROM dự phòng");
+      boolean hadTarget = target.exists();
+      if (hadTarget && !target.renameTo(backup)) throw new IllegalStateException("Không thể bảo vệ ROM cũ");
+      if (!temp.renameTo(target)) {
+        if (hadTarget) backup.renameTo(target);
+        throw new IllegalStateException("Không thể hoàn tất sao chép ROM");
+      }
+      if (backup.exists()) backup.delete();
       Intent game = new Intent(this, org.libsdl.app.EmulatorActivity.class);
       game.putExtra("rom_path", target.getAbsolutePath());
       String fpsValue = fps == null ? "60" : fps.replaceAll("[^0-9]", "");
@@ -161,6 +175,8 @@ public class MainActivity extends Activity {
       game.putExtra("resample_video", "Lọc hình ảnh (mGBA)".equals(quality));
       startActivity(game);
     } catch (Exception e) {
+      if (temp.exists()) temp.delete();
+      if (backup.exists() && !target.exists()) backup.renameTo(target);
       Toast.makeText(this, "Không mở được ROM: " + e.getMessage(), Toast.LENGTH_LONG).show();
     }
   }
