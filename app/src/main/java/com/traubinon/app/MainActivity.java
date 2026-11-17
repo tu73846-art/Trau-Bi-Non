@@ -67,6 +67,28 @@ public class MainActivity extends Activity {
       });
     }
 
+    @JavascriptInterface public void saveCheats(String gameName, String content) {
+      runOnUiThread(() -> {
+        try {
+          String base = gameName == null ? "" : gameName.trim();
+          base = base.replaceAll("[^A-Za-z0-9._-]", "_");
+          int dot = base.lastIndexOf('.');
+          if (dot > 0) base = base.substring(0, dot);
+          if (base.isEmpty()) throw new IllegalArgumentException("Tên game không hợp lệ");
+          File folder = new File(getFilesDir(), "tbn_cheats");
+          if (!folder.exists() && !folder.mkdirs()) throw new IllegalStateException("Không tạo được thư mục cheat");
+          File target = new File(folder, base + ".cheats");
+          try (FileOutputStream out = new FileOutputStream(target, false)) {
+            out.write((content == null ? "" : content).getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            out.flush();
+          }
+          Toast.makeText(MainActivity.this, "Đã lưu AutoCheat cho " + base + ". Mở lại game để áp dụng.", Toast.LENGTH_LONG).show();
+        } catch (Exception e) {
+          Toast.makeText(MainActivity.this, "Không lưu được AutoCheat: " + e.getMessage(), Toast.LENGTH_LONG).show();
+        }
+      });
+    }
+
     @JavascriptInterface public void openRom(String value) {
       runOnUiThread(() -> launchRom(Uri.parse(value)));
     }
