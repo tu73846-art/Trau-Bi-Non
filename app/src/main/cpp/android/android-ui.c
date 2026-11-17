@@ -336,10 +336,14 @@ struct OverlayButton {
 	SDL_Rect rect;
 	SDL_Keycode key;
 	const char* label;
+	int action;
 };
+
+enum { OVERLAY_KEY = 0, OVERLAY_SLOT, OVERLAY_SAVE, OVERLAY_LOAD };
 
 static struct {
 	bool hidden;
+	int saveSlot;
 	SDL_Window* window;
 	struct {
 		Sint64 id;
@@ -348,11 +352,12 @@ static struct {
 	} touches[MAX_TOUCHES];
 } overlay;
 
-static void _pushKey(SDL_Keycode key, bool down) {
+static void _pushKey(SDL_Keycode key, bool down, SDL_Keymod mod) {
 	SDL_Event event;
 	SDL_memset(&event, 0, sizeof(event));
 	event.type = down ? SDL_KEYDOWN : SDL_KEYUP;
 	event.key.keysym.sym = key;
+	event.key.keysym.mod = mod;
 	event.key.keysym.scancode = SDL_GetScancodeFromKey(key);
 	event.key.state = down ? SDL_PRESSED : SDL_RELEASED;
 	event.key.repeat = 0;
@@ -372,21 +377,30 @@ static int _layout(const SDL_Rect* view, struct OverlayButton* out) {
 	int dpy = h - cell * 3;
 	if (view && dpy < view->y + view->h + cell * 2) dpy = h - cell * 2;
 	// Four-way D-pad on the left.
-	out[n++] = (struct OverlayButton) {{dpx-cell/2, dpy-cell*2, cell, cell}, SDLK_UP, "^"};
-	out[n++] = (struct OverlayButton) {{dpx-cell/2, dpy, cell, cell}, SDLK_DOWN, "v"};
-	out[n++] = (struct OverlayButton) {{dpx-cell*3/2, dpy-cell, cell, cell}, SDLK_LEFT, "<"};
-	out[n++] = (struct OverlayButton) {{dpx+cell/2, dpy-cell, cell, cell}, SDLK_RIGHT, ">"};
+	out[n++] = (struct OverlayButton) {{dpx-cell/2, dpy-cell*2, cell, cell}, SDLK_UP, "^", OVERLAY_KEY};
+	out[n++] = (struct OverlayButton) {{dpx-cell/2, dpy, cell, cell}, SDLK_DOWN, "v", OVERLAY_KEY};
+	out[n++] = (struct OverlayButton) {{dpx-cell*3/2, dpy-cell, cell, cell}, SDLK_LEFT, "<", OVERLAY_KEY};
+	out[n++] = (struct OverlayButton) {{dpx+cell/2, dpy-cell, cell, cell}, SDLK_RIGHT, ">", OVERLAY_KEY};
 	// Four face buttons: X/Y are mapped to the GBA shoulder buttons L/R.
 	int bx = landscape ? w-cell*3 : w*3/4;
 	int by = dpy-cell/2;
-	out[n++] = (struct OverlayButton) {{bx+cell/2, by-cell*3/2, cell, cell}, SDLK_x, "A"};
-	out[n++] = (struct OverlayButton) {{bx-cell/2, by+cell/2, cell, cell}, SDLK_z, "B"};
-	out[n++] = (struct OverlayButton) {{bx-cell*3/2, by-cell*3/2, cell, cell}, SDLK_a, "X"};
-	out[n++] = (struct OverlayButton) {{bx-cell*3/2, by+cell/2, cell, cell}, SDLK_s, "Y"};
+	out[n++] = (struct OverlayButton) {{bx+cell/2, by-cell*3/2, cell, cell}, SDLK_x, "A", OVERLAY_KEY};
+	out[n++] = (struct OverlayButton) {{bx-cell/2, by+cell/2, cell, cell}, SDLK_z, "B", OVERLAY_KEY};
+	out[n++] = (struct OverlayButton) {{bx-cell*3/2, by-cell*3/2, cell, cell}, SDLK_a, "X", OVERLAY_KEY};
+	out[n++] = (struct OverlayButton) {{bx-cell*3/2, by+cell/2, cell, cell}, SDLK_s, "Y", OVERLAY_KEY};
 	// Start and Select remain centered at the bottom.
 	int sy = h-cell*2;
-	out[n++] = (struct OverlayButton) {{w/2-cell*2, sy, cell*2, cell/2}, SDLK_RETURN, "ST"};
-	out[n++] = (struct OverlayButton) {{w/2+cell/2, sy, cell*2, cell/2}, SDLK_BACKSPACE, "SL"};
+	out[n++] = (struct OverlayButton) {{w/2-cell*2, sy, cell*2, cell/2}, SDLK_RETURN, "ST", OVERLAY_KEY};
+	out[n++] = (struct OverlayButton) {{w/2+cell/2, sy, cell*2, cell/2}, SDLK_BACKSPACE, "SL", OVERLAY_KEY};
+	// mGBA: Shift+F1..F9 saves; F1..F9 loads.
+	static char slotLabel[16];
+	if (!overlay.saveSlot) overlay.saveSlot = 1;
+	snprintf(slotLabel, sizeof(slotLabel), "SLOT %d", overlay.saveSlot);
+	int bw = cell * 2, bh = cell / 2, gap = 4;
+	int left = (w - (bw * 3 + gap * 2)) / 2, top = 8;
+	out[n++] = (struct OverlayButton) {{left, top, bw, bh}, SDLK_UNKNOWN, slotLabel, OVERLAY_SLOT};
+	out[n++] = (struct OverlayButton) {{left + bw + gap, top, bw, bh}, SDLK_UNKNOWN, "SAVE", OVERLAY_SAVE};
+	out[n++] = (struct OverlayButton) {{left + (bw + gap) * 2, top, bw, bh}, SDLK_UNKNOWN, "LOAD", OVERLAY_LOAD};
 	return n;
 }
 
@@ -408,6 +422,7 @@ static const SDL_Rect* _toggleRect(void) {
 
 void mAndroidOverlaySetWindow(SDL_Window* window) {
 	overlay.window = window;
+	if (!overlay.saveSlot) overlay.saveSlot = 1;
 }
 
 void mAndroidOverlayReset(void) {
@@ -440,12 +455,23 @@ void mAndroidOverlayHandleEvent(const SDL_Event* event) {
 		if (overlay.hidden) {
 			return;
 		}
-		struct OverlayButton buttons[12];
+		struct OverlayButton buttons[16];
 		int n = _layout(NULL, buttons);
 		int i;
 		for (i = 0; i < n; ++i) {
 			if (x >= buttons[i].rect.x && x < buttons[i].rect.x + buttons[i].rect.w &&
 			    y >= buttons[i].rect.y && y < buttons[i].rect.y + buttons[i].rect.h) {
+				if (buttons[i].action == OVERLAY_SLOT) {
+					overlay.saveSlot = overlay.saveSlot % 9 + 1;
+					return;
+				}
+				if (buttons[i].action == OVERLAY_SAVE || buttons[i].action == OVERLAY_LOAD) {
+					SDL_Keycode stateKey = (SDL_Keycode) (SDLK_F1 + overlay.saveSlot - 1);
+					SDL_Keymod mods = buttons[i].action == OVERLAY_SAVE ? KMOD_SHIFT : KMOD_NONE;
+					_pushKey(stateKey, true, mods);
+					_pushKey(stateKey, false, mods);
+					return;
+				}
 				int slot;
 				for (slot = 0; slot < MAX_TOUCHES; ++slot) {
 					if (!overlay.touches[slot].active) {
@@ -456,7 +482,7 @@ void mAndroidOverlayHandleEvent(const SDL_Event* event) {
 					overlay.touches[slot].id = id;
 					overlay.touches[slot].active = true;
 					overlay.touches[slot].key = buttons[i].key;
-					_pushKey(buttons[i].key, true);
+					_pushKey(buttons[i].key, true, KMOD_NONE);
 				}
 				return;
 			}
@@ -465,7 +491,7 @@ void mAndroidOverlayHandleEvent(const SDL_Event* event) {
 	}
 
 	// FINGERUP / FINGERMOTION: release or slide between buttons
-	struct OverlayButton buttons[12];
+	struct OverlayButton buttons[16];
 	int n = overlay.hidden ? 0 : _layout(NULL, buttons);
 	int i;
 	for (i = 0; i < MAX_TOUCHES; ++i) {
@@ -482,16 +508,16 @@ void mAndroidOverlayHandleEvent(const SDL_Event* event) {
 			}
 		}
 		if (event->type == SDL_FINGERUP) {
-			_pushKey(overlay.touches[i].key, false);
+			_pushKey(overlay.touches[i].key, false, KMOD_NONE);
 			overlay.touches[i].active = false;
-		} else if (!target || target->key != overlay.touches[i].key) {
-			_pushKey(overlay.touches[i].key, false);
+		} else if (!target || target->action != OVERLAY_KEY || target->key != overlay.touches[i].key) {
+			_pushKey(overlay.touches[i].key, false, KMOD_NONE);
 			overlay.touches[i].active = false;
 			if (target) {
 				overlay.touches[i].id = id;
 				overlay.touches[i].active = true;
 				overlay.touches[i].key = target->key;
-				_pushKey(target->key, true);
+				_pushKey(target->key, true, KMOD_NONE);
 			}
 		}
 	}
@@ -509,7 +535,7 @@ void mAndroidOverlayDraw(SDL_Renderer* renderer, const SDL_Rect* view) {
 	if (overlay.hidden) {
 		return;
 	}
-	struct OverlayButton buttons[12];
+	struct OverlayButton buttons[16];
 	int n = _layout(view, buttons);
 	int i;
 	for (i = 0; i < n; ++i) {
@@ -525,9 +551,11 @@ void mAndroidOverlayDraw(SDL_Renderer* renderer, const SDL_Rect* view) {
 	SDL_Surface* surf = _makeSurface(w, h);
 	Uint32 white = SDL_MapRGBA(surf->format, 0x9B, 0xF4, 0xFF, 0xFF);
 	for (i = 0; i < n; ++i) {
-		int tx = buttons[i].rect.x + (buttons[i].rect.w - 8 * 2) / 2;
-		int ty = buttons[i].rect.y + (buttons[i].rect.h - 8 * 2) / 2;
-		_blitText(surf, buttons[i].label, tx, ty, 2, white);
+		int scale = buttons[i].action == OVERLAY_KEY ? 2 : 1;
+		int labelWidth = (int) strlen(buttons[i].label) * 8 * scale;
+		int tx = buttons[i].rect.x + (buttons[i].rect.w - labelWidth) / 2;
+		int ty = buttons[i].rect.y + (buttons[i].rect.h - 8 * scale) / 2;
+		_blitText(surf, buttons[i].label, tx, ty, scale, white);
 	}
 	SDL_Texture* tex = SDL_CreateTextureFromSurface(renderer, surf);
 	SDL_FreeSurface(surf);
