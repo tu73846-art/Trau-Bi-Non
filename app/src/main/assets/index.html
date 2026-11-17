@@ -68,7 +68,7 @@ if(which==='controls'){b.innerHTML='<h3>CÀI NÚT ĐIỀU KHIỂN</h3><div class
 if(which==='graphics'){b.innerHTML='<h3>ĐỒ HỌA & FPS</h3><label>Chế độ hiển thị</label><select id="quality"><option>Tiêu chuẩn</option><option>Lọc hình ảnh (mGBA)</option></select><p><label>FPS mục tiêu</label><select id="fps"><option>30 FPS</option><option>60 FPS</option></select></p><p class="muted">FPS mục tiêu và lọc hình ảnh được gửi trực tiếp tới lõi mGBA khi khởi chạy game tiếp theo.</p><button onclick="savePrefs()">LƯU CÀI ĐẶT</button>';let p=safeLoad('graphics',{});if(!p||typeof p!=='object')p={};$('quality').value=['Tiêu chuẩn','Lọc hình ảnh (mGBA)'].includes(p.quality)?p.quality:'Tiêu chuẩn';$('fps').value=['30 FPS','60 FPS'].includes(p.fps)?p.fps:'60 FPS'}
 if(which==='saves'){b.innerHTML='<h3>Ô LƯU TRẠNG THÁI GAME</h3><p class="muted">Hỗ trợ tối đa 9999 ô save-state thật của lõi mGBA (giới hạn bởi dung lượng bộ nhớ). Khi đang chơi, chạm SLOT để chuyển ô 1–9999, SAVE để lưu và LOAD để khôi phục. Mỗi game có tệp lưu riêng trong bộ nhớ ứng dụng.</p><button onclick="closePanel();launchCurrent()">▶ MỞ GAME ĐỂ LƯU / TẢI</button><p class="muted">Không gỡ dữ liệu ứng dụng nếu muốn giữ các ô lưu. Nên sao lưu tiến trình quan trọng.</p>'}
 if(which==='network'){let active=games[index]?.name||'';b.innerHTML='<h3>⇄ CHƠI ONLINE / OFFLINE</h3><p><b>OFFLINE · Một người chơi</b></p><p class="muted">Chạy game đã chọn trên điện thoại này, không cần mạng.</p><button onclick="closePanel();launchCurrent()">▶ CHẠY OFFLINE · mGBA</button><button onclick="closePanel();launchMyBoyCurrent()">▶ CHẠY OFFLINE · MY BOY!</button><hr style="border-color:#17485a"><p><b>ONLINE · Kết nối hai điện thoại</b></p><p class="muted">My Boy! hỗ trợ Link Remote qua Wi-Fi hoặc Bluetooth. Đây là chơi mạng cục bộ (LAN/hotspot), không phải máy chủ Internet.</p><p class="muted"><b>1.</b> Cả hai máy cài My Boy! và có ROM phù hợp. Với hai bản game khác nhau, cần có đủ cả hai ROM trên cả hai máy.</p><p class="muted"><b>2. Wi-Fi:</b> Kết nối hai máy cùng Wi-Fi hoặc bật điểm phát sóng ở một máy. Trong My Boy!, máy chủ chọn Menu → Link Remote → Wi-Fi Server; máy còn lại chọn Wi-Fi Client và nhập IP/port máy chủ hiển thị.</p><p class="muted"><b>3. Bluetooth:</b> Ghép đôi hai máy trong cài đặt Bluetooth trước, sau đó trong My Boy! một máy chọn Bluetooth Server, máy kia chọn Bluetooth Client.</p><p class="muted"><b>4.</b> Khi đã kết nối, vào khu vực Link/Cable trong game để giao dịch hoặc đấu nếu game hỗ trợ.</p><button onclick="launchOnline()">▶ MỞ ROM TRONG MY BOY!</button><p class="muted">Trâu Bi Non có thể mở ROM, nhưng My Boy! không cung cấp API công khai để ứng dụng này tự bật Server/Client hoặc tự ghép nối. Hãy hoàn tất các bước Link Remote trong My Boy!.</p>'}
-if(which==='cheats'){let active=games[index]?.name||'';b.innerHTML='<h3>⚡ AUTOCHEAT · '+(active?escapeHtml(active):'KHO MÃ')+'</h3><p class="muted">Game đang chọn: '+(active?escapeHtml(active):'Chưa chọn game')+'</p><input id="cheatGame" placeholder="Tên game" value="'+escapeHtml(active)+'"><input id="cheatName" placeholder="Tên cheat"><input id="cheatCode" placeholder="Mã cheat"><button onclick="addCheat()">＋ LƯU CHEAT</button><button onclick="document.getElementById('cheatImport').click()">NHẬP TỆP .TXT / .CHT</button><button onclick="exportCheats()">XUẤT JSON</button><button onclick="exportCheatCht()">XUẤT .CHT</button><button onclick="searchCheatsOnline()">TÌM CHEAT TRÊN MẠNG</button><button onclick="copyAllCurrentCheats()">SAO CHÉP MÃ GAME NÀY</button><button onclick="applyCheatsAndLaunch()">LƯU CHEAT VÀ CHẠY mGBA</button><button onclick="openMyBoyWithCheats()">MỞ MY BOY!</button><div id="cheatList"></div><p class="muted">Mã sẽ được ghi thành tệp .cheats riêng theo tên ROM để lõi mGBA tự nạp khi mở game. Mã không tương thích có thể không hoạt động; hãy thử từng mã và sao lưu save.</p>'}
+if(which==='cheats'){let active=games[index]?.name||'';b.innerHTML='<h3>⚡ AUTOCHEAT · '+(active?escapeHtml(active):'KHO MÃ')+'</h3><p class="muted">Game đang chọn: '+(active?escapeHtml(active):'Chưa chọn game')+'</p><input id="cheatGame" placeholder="Tên game" value="'+escapeHtml(active)+'"><input id="cheatName" placeholder="Tên cheat"><input id="cheatCode" placeholder="Mã cheat"><button onclick="addCheat()">＋ LƯU CHEAT</button><button onclick="document.getElementById('cheatImport').click()">NHẬP TỆP .TXT / .CHT</button><button onclick="exportCheats()">XUẤT JSON</button><button onclick="exportCheatCht()">XUẤT .CHT</button><button onclick="searchCheatsOnline()">TÌM CHEAT TRÊN MẠNG</button><button onclick="copyAllCurrentCheats()">SAO CHÉP MÃ GAME NÀY</button><button onclick="applyCheatsAndLaunch()">LƯU CHEAT VÀ CHẠY mGBA</button><button onclick="openMyBoyWithCheats()">MỞ MY BOY!</button><div id="cheatList"></div><div id="onlineCheatResults"></div><p class="muted">Kho mã trực tuyến: Libretro Database (CC-BY-SA-4.0). Mã tải về sẽ mặc định TẮT để bạn chọn trước khi áp dụng. Hãy kiểm tra đúng phiên bản game/khu vực.</p>'}
 renderGames();renderCheatList();updateSlots()}
 function closePanel(){$('panel').style.display='none'}
 function normalizeCheatEntry(x,i){
@@ -152,7 +152,86 @@ function copyAllCurrentCheats(){let xs=currentCheatEntries();if(xs.length)copyCh
 function openMyBoyWithCheats(){let xs=currentCheatEntries();if(!xs.length){$('hint').textContent='Chưa có mã cho game đang chọn';return}copyCheatText(xs.map(x=>x.name+'\n'+x.code).join('\n\n'));launchMyBoyCurrent()}
 function exportCheats(){let blob=new Blob([JSON.stringify(cheats,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='trau-bi-non-cheats.json';a.click();URL.revokeObjectURL(a.href)}
 function exportCheatCht(){let game=games[index]?.name||$('cheatGame')?.value||'game';let entries=currentCheatEntries();if(!entries.length){$('hint').textContent='Chưa có mã để xuất';return}let body=entries.map(x=>'['+String(x.name||'Cheat').replace(/[\\r\\n\\[\\]]/g,' ')+']\\n'+(x.enabled===false?'!disabled\\n':'')+x.code).join('\\n\\n');let blob=new Blob([body],{type:'text/plain'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=game.replace(/[^A-Za-z0-9._-]/g,'_')+'.cht';a.click();URL.revokeObjectURL(a.href);$('hint').textContent='Đã xuất .CHT. Có thể nhập thủ công vào ứng dụng hỗ trợ định dạng này.'}
-function searchCheatsOnline(){let game=games[index]?.name||$('cheatGame')?.value||'';if(!game.trim()){$('hint').textContent='Chọn game trước khi tìm mã';return}if(window.AndroidBridge?.searchCheats){AndroidBridge.searchCheats(game);$('hint').textContent='Đã mở tìm kiếm cheat cho '+game+'. Hãy kiểm tra mã và nhập tệp về đây.'}else{window.open('https://www.google.com/search?q='+encodeURIComponent(game+' GBA cheats GameShark'),'_blank')}}
+function normalizeCheatTitle(value){
+ return String(value||'').replace(/\\.(gba|gbc|gb)$/i,'').replace(/\\([^)]*\\)|\\[[^\\]]*\\]/g,' ').normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim().replace(/\\s+/g,' ');
+}
+async function searchCheatsOnline(){
+ const game=games[index]?.name||$('cheatGame')?.value||'';
+ if(!game.trim()){$('hint').textContent='Chọn game trước khi tìm mã';return}
+ const target=normalizeCheatTitle(game);
+ $('hint').textContent='Đang tìm kho mã GBA trực tuyến…';
+ const box=$('onlineCheatResults');if(box)box.innerHTML='<p class="muted">Đang kết nối Libretro Database…</p>';
+ try{
+  const endpoint='https://api.github.com/repos/libretro/libretro-database/contents/cht/Nintendo%20-%20Game%20Boy%20Advance?per_page=1000';
+  const response=await fetch(endpoint,{headers:{'Accept':'application/vnd.github+json'}});
+  if(!response.ok)throw new Error('Kho mã trả về HTTP '+response.status);
+  const files=await response.json();
+  const tokens=target.split(' ').filter(x=>x.length>1&&!['the','and','for','gba','game'].includes(x));
+  const matches=files.filter(f=>f.type==='file'&&/\\.cht$/i.test(f.name)).map(f=>{
+   const title=normalizeCheatTitle(f.name);
+   const words=new Set(title.split(' ').filter(x=>x.length>1));
+   const overlap=tokens.filter(x=>words.has(x)).length;
+   const score=tokens.length?overlap/tokens.length:0;
+   const exact=title===target||title.startsWith(target+' ');
+   return {file:f,score:exact?2:score};
+  }).filter(x=>x.score>=0.5).sort((a,b)=>b.score-a.score||a.file.name.localeCompare(b.file.name)).slice(0,12);
+  if(!box)return;
+  if(!matches.length){box.innerHTML='<p class="muted">Chưa tìm thấy tệp khớp tên game trong kho GBA. Bạn có thể thử tên game ngắn hơn hoặc thêm mã thủ công.</p>';$('hint').textContent='Không tìm thấy mã phù hợp cho '+game;return}
+  box.innerHTML='<h3>KẾT QUẢ KHO CHEAT ('+matches.length+')</h3>'+matches.map(x=>'<div class="gameRow"><span>'+escapeHtml(x.file.name)+'<br><small class="muted">'+(x.score===2?'Khớp tên':'Khớp gần đúng')+'</small></span><button onclick="downloadCheatFile(\\''+encodeURIComponent(x.file.download_url)+'\\',\\''+encodeURIComponent(x.file.name)+'\\')">TẢI MÃ</button></div>').join('');
+  $('hint').textContent='Tìm thấy '+matches.length+' tệp mã. Chọn TẢI MÃ để nhập vào AutoCheat.';
+ }catch(e){
+  if(box)box.innerHTML='<p class="muted">Không kết nối được kho mã. Kiểm tra Internet rồi thử lại. ('+escapeHtml(e.message)+')</p>';
+  $('hint').textContent='Tìm kho mã thất bại · cần kết nối Internet';
+ }
+}
+function parseLibretroCheatFile(raw){
+ const rows=new Map();
+ String(raw||'').split(/\\r?\\n/).forEach(line=>{
+  const m=line.match(/^\\s*cheat(\\d+)_(desc|code|enable)\\s*=\\s*(.*?)\\s*$/i);
+  if(!m)return;
+  const id=Number(m[1]),field=m[2].toLowerCase();
+  let value=m[3].trim();
+  if(value.startsWith('"')&&value.endsWith('"'))value=value.slice(1,-1).replace(/\\\\(["\\\\])/g,'$1');
+  if(!rows.has(id))rows.set(id,{name:'',code:'',enabled:false});
+  rows.get(id)[field==='desc'?'name':field==='code'?'code':'enabled']=field==='enable'?value.toLowerCase()==='true':value;
+ });
+ const result=[];
+ [...rows.entries()].sort((a,b)=>a[0]-b[0]).forEach(([id,row])=>{
+  const rawCode=String(row.code||'').trim();
+  let chunks=rawCode.split(/\\s*\\+\\s*/).filter(Boolean);
+  if(chunks.length===1)chunks=rawCode.trim().split(/\\s+/).filter(Boolean);
+  let lines=[];
+  if(chunks.length>=2&&chunks.length%2===0){
+   for(let i=0;i<chunks.length;i+=2){
+    if(/^[0-9a-f]{8}$/i.test(chunks[i])&&/^[0-9a-f]{4,8}$/i.test(chunks[i+1]))lines.push(chunks[i].toUpperCase()+' '+chunks[i+1].toUpperCase());
+   }
+  }
+  const code=lines.join('\\n');
+  if(code&&validCheatCode(code))result.push({name:String(row.name||('Cheat '+(id+1))).slice(0,100),code,enabled:false});
+ });
+ return result;
+}
+async function downloadCheatFile(encodedUrl,encodedName){
+ const game=games[index]?.name||$('cheatGame')?.value||'';
+ if(!game){$('hint').textContent='Chọn game trước khi tải mã';return}
+ let url='',name='';
+ try{url=decodeURIComponent(encodedUrl);name=decodeURIComponent(encodedName)}catch(e){$('hint').textContent='Đường dẫn tệp không hợp lệ';return}
+ if(!url.startsWith('https://raw.githubusercontent.com/libretro/libretro-database/')){$('hint').textContent='Nguồn tải không được xác thực';return}
+ $('hint').textContent='Đang tải mã: '+name;
+ try{
+  const response=await fetch(url);if(!response.ok)throw new Error('HTTP '+response.status);
+  const text=await response.text(),downloaded=parseLibretroCheatFile(text);
+  if(!downloaded.length)throw new Error('Tệp không có mã tương thích với mGBA');
+  const previous=Array.isArray(cheats[game])?cheats[game].slice():[];
+  const known=new Set(previous.map(x=>String(x.code||'').toLowerCase()));
+  const fresh=downloaded.filter(x=>!known.has(x.code.toLowerCase()));
+  if(!fresh.length){$('hint').textContent='Mã trong tệp này đã có trong kho AutoCheat.';return}
+  cheats[game]=previous.concat(fresh);
+  if(!saveLocal('cheats',cheats)){if(previous.length)cheats[game]=previous;else delete cheats[game];return}
+  renderCheatList();
+  $('hint').textContent='Đã tải '+fresh.length+' mã cho '+game+'. Mã mới đang TẮT; bật mã cần dùng rồi chọn LƯU CHEAT VÀ CHẠY mGBA.';
+ }catch(e){$('hint').textContent='Không tải/đọc được tệp cheat: '+e.message}
+}
 function exportBackup(){
  const payload={app:'TrauBiNon',version:1,createdAt:new Date().toISOString(),games,cheats,graphics:safeLoad('graphics',{quality:'normal',fps:'60'})};
  const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
