@@ -79,8 +79,8 @@ function normalizeCheatEntry(x,i){
  return {name:String(x.name||x.title||('Cheat '+(i+1))).slice(0,100),code,enabled:x.enabled!==false};
 }
 function validCheatCode(code){
- const lines=String(code||'').split(/\\r?\\n/).map(x=>x.trim()).filter(Boolean);
- return lines.length>0&&lines.every(x=>/^(?:[0-9a-f]{8})\\s+(?:[0-9a-f]{4,8})$/i.test(x));
+ const lines=String(code||'').split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
+ return lines.length>0&&lines.every(x=>/^(?:[0-9a-f]{8})\s+(?:[0-9a-f]{4,8})$/i.test(x));
 }
 function addCheat(){
  let g=$('cheatGame').value.trim()||games[index]?.name||'Game chưa đặt tên';
