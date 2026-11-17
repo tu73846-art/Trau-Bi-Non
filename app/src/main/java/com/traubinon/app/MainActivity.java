@@ -89,8 +89,8 @@ public class MainActivity extends Activity {
       });
     }
 
-    @JavascriptInterface public void openRom(String value) {
-      runOnUiThread(() -> launchRom(Uri.parse(value)));
+    @JavascriptInterface public void openRom(String value, String quality, String fps) {
+      runOnUiThread(() -> launchRom(Uri.parse(value), quality, fps));
     }
   }
 
@@ -107,7 +107,7 @@ public class MainActivity extends Activity {
     return name.replaceAll("[^A-Za-z0-9._-]", "_");
   }
 
-  private void launchRom(Uri uri) {
+  private void launchRom(Uri uri, String quality, String fps) {
     File folder = getExternalFilesDir("roms");
     if (folder == null) folder = new File(getFilesDir(), "roms");
     if (!folder.exists() && !folder.mkdirs()) {
@@ -125,6 +125,10 @@ public class MainActivity extends Activity {
       out.flush();
       Intent game = new Intent(this, org.libsdl.app.EmulatorActivity.class);
       game.putExtra("rom_path", target.getAbsolutePath());
+      String fpsValue = fps == null ? "60" : fps.replaceAll("[^0-9]", "");
+      if (!"30".equals(fpsValue) && !"60".equals(fpsValue)) fpsValue = "60";
+      game.putExtra("fps_target", fpsValue);
+      game.putExtra("resample_video", "Lọc hình ảnh (mGBA)".equals(quality));
       startActivity(game);
     } catch (Exception e) {
       Toast.makeText(this, "Không mở được ROM: " + e.getMessage(), Toast.LENGTH_LONG).show();
