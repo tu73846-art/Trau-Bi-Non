@@ -3,13 +3,18 @@ package com.traubinon.app;
 import android.app.Activity;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
+import android.provider.OpenableColumns;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebChromeClient;
 import android.widget.Toast;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
 
 public class MainActivity extends Activity {
   private static final int PICK_ROM = 410;
@@ -47,8 +52,7 @@ public class MainActivity extends Activity {
         if (i != null) {
           i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
           startActivity(i);
-        }
-        else Toast.makeText(MainActivity.this, "Chưa tìm thấy My Boy! Hãy cài My Boy trước.", Toast.LENGTH_LONG).show();
+        } else Toast.makeText(MainActivity.this, "Chưa tìm thấy My Boy! Hãy cài My Boy trước.", Toast.LENGTH_LONG).show();
       });
     }
 
@@ -68,23 +72,40 @@ public class MainActivity extends Activity {
     }
   }
 
-  private void launchRom(Uri uri) {
-    Intent i = new Intent(Intent.ACTION_VIEW);
-    String mime = getContentResolver().getType(uri);
-    if (mime == null || mime.trim().isEmpty() || "*/*".equals(mime)) mime = "application/octet-stream";
-    i.setDataAndType(uri, mime);
-    i.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-    i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-    i.setPackage(MYBOY_PACKAGE);
-    try {
-      startActivity(i);
-    } catch (ActivityNotFoundException e) {
-      i.setPackage(null);
-      try {
-        startActivity(Intent.createChooser(i, "Mở ROM bằng giả lập"));
-      } catch (Exception ignored) {
-        Toast.makeText(this, "Không tìm thấy ứng dụng hỗ trợ mở ROM.", Toast.LENGTH_LONG).show();
+  private String displayName(Uri uri) {
+    String name = null;
+    try (Cursor c = getContentResolver().query(uri, null, null, null, null)) {
+      if (c != null && c.moveToFirst()) {
+        int col = c.getColumnIndex(OpenableColumns.DISPLAY_NAME);
+        if (col >= 0) name = c.getString(col);
       }
+    } catch (Exception ignored) { }
+    if (name == null || name.trim().isEmpty()) name = uri.getLastPathSegment();
+    if (name == null || name.trim().isEmpty()) name = "game.gba";
+    return name.replaceAll("[^A-Za-z0-9._-]", "_");
+  }
+
+  private void launchRom(Uri uri) {
+    File folder = getExternalFilesDir("roms");
+    if (folder == null) folder = new File(getFilesDir(), "roms");
+    if (!folder.exists() && !folder.mkdirs()) {
+      Toast.makeText(this, "Không tạo được thư mục ROM.", Toast.LENGTH_LONG).show();
+      return;
+    }
+    String name = displayName(uri);
+    File target = new File(folder, name);
+    try (InputStream in = getContentResolver().openInputStream(uri);
+         FileOutputStream out = new FileOutputStream(target)) {
+      if (in == null) throw new IllegalStateException("Không đọc được ROM");
+      byte[] buffer = new byte[8192];
+      int count;
+      while ((count = in.read(buffer)) != -1) out.write(buffer, 0, count);
+      out.flush();
+      Intent game = new Intent(this, org.libsdl.app.EmulatorActivity.class);
+      game.putExtra("rom_path", target.getAbsolutePath());
+      startActivity(game);
+    } catch (Exception e) {
+      Toast.makeText(this, "Không mở được ROM: " + e.getMessage(), Toast.LENGTH_LONG).show();
     }
   }
 
@@ -94,8 +115,7 @@ public class MainActivity extends Activity {
       Uri uri = data.getData();
       try { getContentResolver().takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION); }
       catch (SecurityException ignored) { }
-      String name = uri.getLastPathSegment();
-      if (name == null || name.trim().isEmpty()) name = "ROM đã chọn";
+      String name = displayName(uri);
       final String safeName = org.json.JSONObject.quote(name);
       final String safeUri = org.json.JSONObject.quote(uri.toString());
       if (web != null) web.post(() -> web.evaluateJavascript(
