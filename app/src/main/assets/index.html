@@ -24,9 +24,21 @@ function toggleMenu(){ $('menu').style.display=$('menu').style.display==='block'
 function toggleSearch(){ $('searchbar').style.display=$('searchbar').style.display==='block'?'none':'block';if($('searchbar').style.display==='block')$('searchInput').focus();else{$('searchInput').value='';renderGames()}}
 function pickRom(){ $('menu').style.display='none';if(window.AndroidBridge)AndroidBridge.pickRom();else alert('Chọn ROM cần chạy trên bản Android.')}
 function addGameFromAndroid(name,uri){let found=games.findIndex(g=>g.uri===uri);if(found<0){games.push({name:name,uri:uri});index=games.length-1}else index=found;persist();renderGames();$('hint').textContent='Đã thêm: '+name+' · Nhấn CHẠY GAME'}
-function renderGames(){let q=$('searchInput')?.value?.toLowerCase()||'';let filtered=games.filter(g=>g.name.toLowerCase().includes(q));let g=games[index];$('current').innerHTML=g?escapeHtml(g.name)+'<small>'+ (index+1)+' / '+games.length+' GAME</small>':'CHƯA CÓ GAME<small>Thêm ROM để bắt đầu</small>';let p=games[(index-1+games.length)%games.length],n=games[(index+1)%games.length];$('prev').textContent=p?p.name:'TRƯỚC';$('next').textContent=n?n.name:'TIẾP';let list=$('gameList');if(list)list.innerHTML=filtered.map(x=>'<div class="gameRow"><span>'+escapeHtml(x.name)+'</span><button onclick="selectGameByUri(\''+encodeURIComponent(x.uri)+'\')">CHỌN</button></div>').join('')||'<p class="muted">Chưa có game phù hợp.</p>'}
+function renderGames(){let q=$('searchInput')?.value?.toLowerCase()||'';let filtered=games.filter(g=>g.name.toLowerCase().includes(q));let g=games[index];$('current').innerHTML=g?escapeHtml(g.name)+'<small>'+ (index+1)+' / '+games.length+' GAME</small>':'CHƯA CÓ GAME<small>Thêm ROM để bắt đầu</small>';let p=games[(index-1+games.length)%games.length],n=games[(index+1)%games.length];$('prev').textContent=p?p.name:'TRƯỚC';$('next').textContent=n?n.name:'TIẾP';let list=$('gameList');if(list)list.innerHTML=filtered.map(x=>'<div class="gameRow"><span>'+escapeHtml(x.name)+'</span><button onclick="selectGameByUri(\\''+encodeURIComponent(x.uri)+'\\')">CHỌN</button><button class="red" onclick="removeGameByUri(\\''+encodeURIComponent(x.uri)+'\\')">XÓA</button></div>').join('')||'<p class="muted">Chưa có game phù hợp.</p>'}
 function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function selectGameByUri(u){let uri=decodeURIComponent(u);index=games.findIndex(g=>g.uri===uri);closePanel();renderGames()}
+function removeGameByUri(u){
+ let uri=decodeURIComponent(u),at=games.findIndex(g=>g.uri===uri);
+ if(at<0)return;
+ let name=games[at].name;
+ if(!confirm('Xóa '+name+' khỏi thư viện Trâu Bi Non? Tệp ROM gốc và save-state trong ứng dụng không bị xóa.'))return;
+ games.splice(at,1);
+ const key=Object.keys(cheats).find(k=>k.trim().toLowerCase()===name.trim().toLowerCase());
+ if(key){delete cheats[key];localStorage.setItem('cheats',JSON.stringify(cheats))}
+ if(index>=games.length)index=Math.max(0,games.length-1);
+ persist();renderGames();renderCheatList();
+ $('hint').textContent='Đã xóa '+name+' khỏi thư viện.';
+}
 function shift(d){if(!games.length)return;index=(index+d+games.length)%games.length;renderGames()}
 function launchCurrent(){let g=games[index];if(!g){pickRom();return}let p=JSON.parse(localStorage.getItem('graphics')||'{}');let quality=p.quality||'Tiêu chuẩn',fps=p.fps||'60 FPS';if(window.AndroidBridge)AndroidBridge.openRom(g.uri,quality,fps);else alert('Chỉ chạy ROM trong ứng dụng Android.')}
 function openMyBoy(){ $('menu').style.display='none';if(window.AndroidBridge)AndroidBridge.openMyBoy();else alert('Chỉ có trên Android.')}
