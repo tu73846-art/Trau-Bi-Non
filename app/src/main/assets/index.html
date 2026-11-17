@@ -7,6 +7,45 @@
 html,body{overscroll-behavior:none;-webkit-tap-highlight-color:transparent;touch-action:pan-y}button{touch-action:manipulation;user-select:none;-webkit-user-select:none}#menu,#panel{overscroll-behavior:contain}#panel{padding:8px}#panel button{min-height:34px}#panel input,#panel select{min-height:36px;font-size:14px}#gameList{max-height:28vh}.gameRow{min-height:40px}
 @media(max-width:520px){body{padding:5px;gap:4px}header{height:34px;padding:3px 6px}header button{min-height:27px;padding:3px 8px;font-size:12px}main{gap:5px}.tile{height:min(58%,27vw);min-width:0;padding:3px;font-size:10px}.tile.big{height:min(82%,35vw);font-size:clamp(11px,3vw,15px)}.tile small{font-size:9px}.actions{gap:4px}.actions button{min-height:30px;padding:4px 6px;font-size:10px}footer{height:35px;gap:3px}footer button{height:29px;min-height:29px;font-size:14px}#hint{height:0.8cm;min-height:23px;max-height:27px;font-size:9px}#menu{top:42px;right:5px;width:min(220px,72vw);max-height:75vh;overflow:auto}#searchbar{top:42px;left:5%;right:5%}#panel{inset:5% 3%;max-height:90%;}#panel h3{font-size:15px}#panel .muted{font-size:10px}}
 @media(max-height:380px){body{padding:3px;gap:3px}header{height:30px}main{min-height:0}.tile{height:min(55%,24vw)}.tile.big{height:min(78%,32vw)}.actions button{min-height:27px}footer{height:31px}footer button{height:26px;min-height:26px}#hint{height:24px;min-height:24px}#panel{inset:3% 4%;padding:6px}}
+
+/* Final small-screen tuning: compact 3.5-inch phones, short landscape screens and touch targets. */
+html{height:100%;height:100dvh}
+body{min-height:0;min-height:100dvh}
+@media(max-width:380px){
+ body{padding:4px;gap:3px}
+ header{height:32px;font-size:13px}
+ header button{font-size:11px;padding:3px 6px}
+ main{gap:3px}
+ .tile{border-radius:8px;font-size:9px}
+ .tile.big{border-radius:10px;font-size:clamp(10px,3.2vw,13px)}
+ .tile small{font-size:8px}
+ .actions{gap:3px}
+ .actions button{padding:3px 4px;font-size:9px;min-height:29px}
+ footer{height:34px;padding:1px;gap:2px}
+ footer button{min-height:29px;height:29px;font-size:13px}
+ #hint{height:0.8cm;min-height:23px;max-height:27px;font-size:8px;white-space:nowrap}
+ #panel{inset:3% 2%;padding:7px}
+ #panel button{min-height:36px;padding:6px}
+ #panel input,#panel select{min-height:38px}
+ .slotgrid{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+@media(orientation:landscape) and (max-height:420px){
+ body{padding:3px;gap:2px}
+ header{height:28px;min-height:28px}
+ header button{min-height:24px}
+ main{flex:1;min-height:0;gap:4px}
+ .tile{height:min(54%,22vw);max-width:27vw}
+ .tile.big{height:min(78%,30vw);max-width:32vw}
+ .actions{min-height:27px}
+ .actions button{min-height:26px;padding:2px 6px}
+ footer{height:30px;min-height:30px}
+ footer button{height:25px;min-height:25px}
+ #hint{height:0.8cm;min-height:23px;max-height:27px}
+ #panel{inset:2% 8%;max-height:96%;padding:6px}
+ #gameList{max-height:22vh}
+}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+
 </style></head><body>
 <header><span>🐃 TRÂU BI NON</span><span><button onclick="toggleSearch()">⌕ TÌM</button> <button onclick="toggleMenu()">⋮</button></span></header>
 <div id="searchbar"><input id="searchInput" placeholder="Nhập tên game để tìm..." oninput="renderGames()"><div id="searchResults"></div><button onclick="toggleSearch()">ĐÓNG</button></div>
