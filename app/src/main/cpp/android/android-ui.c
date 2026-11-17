@@ -397,7 +397,7 @@ static int _layout(const SDL_Rect* view, struct OverlayButton* out) {
 	static char slotLabel[16];
 	if (!overlay.saveSlot) overlay.saveSlot = 1;
 	snprintf(slotLabel, sizeof(slotLabel), "SLOT %d", overlay.saveSlot);
-	int bw = cell * 2, bh = cell / 2, gap = 4;
+	int bw = cell * 2, bh = cell, gap = 4;
 	int left = (w - (bw * 3 + gap * 2)) / 2, top = 8;
 	out[n++] = (struct OverlayButton) {{left, top, bw, bh}, SDLK_UNKNOWN, slotLabel, OVERLAY_SLOT};
 	out[n++] = (struct OverlayButton) {{left + bw + gap, top, bw, bh}, SDLK_UNKNOWN, "SAVE", OVERLAY_SAVE};
