@@ -9,6 +9,9 @@
 #include <SDL.h>
 #include <stdbool.h>
 
+#define TBN_EVENT_SAVE_STATE 0x54424E53
+#define TBN_EVENT_LOAD_STATE 0x54424E4C
+
 #include <mgba-util/common.h>
 
 CXX_GUARD_START
