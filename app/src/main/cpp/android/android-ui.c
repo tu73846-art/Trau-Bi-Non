@@ -486,7 +486,7 @@ void mAndroidOverlayHandleEvent(const SDL_Event* event) {
 			overlay.touches[i].active = false;
 		} else if (!target || target->key != overlay.touches[i].key) {
 			_pushKey(overlay.touches[i].key, false);
-			overlay.touches[i].id = 0;
+			overlay.touches[i].active = false;
 			if (target) {
 				overlay.touches[i].id = id;
 				overlay.touches[i].active = true;
