@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
 #include <strings.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -462,14 +463,16 @@ void mAndroidOverlayHandleEvent(const SDL_Event* event) {
 			if (x >= buttons[i].rect.x && x < buttons[i].rect.x + buttons[i].rect.w &&
 			    y >= buttons[i].rect.y && y < buttons[i].rect.y + buttons[i].rect.h) {
 				if (buttons[i].action == OVERLAY_SLOT) {
-					overlay.saveSlot = overlay.saveSlot % 9 + 1;
+					overlay.saveSlot = overlay.saveSlot >= 9999 ? 1 : overlay.saveSlot + 1;
 					return;
 				}
 				if (buttons[i].action == OVERLAY_SAVE || buttons[i].action == OVERLAY_LOAD) {
-					SDL_Keycode stateKey = (SDL_Keycode) (SDLK_F1 + overlay.saveSlot - 1);
-					SDL_Keymod mods = buttons[i].action == OVERLAY_SAVE ? KMOD_SHIFT : KMOD_NONE;
-					_pushKey(stateKey, true, mods);
-					_pushKey(stateKey, false, mods);
+					SDL_Event action;
+					SDL_memset(&action, 0, sizeof(action));
+					action.type = SDL_USEREVENT;
+					action.user.code = buttons[i].action == OVERLAY_SAVE ? TBN_EVENT_SAVE_STATE : TBN_EVENT_LOAD_STATE;
+					action.user.data1 = (void*) (intptr_t) overlay.saveSlot;
+					SDL_PushEvent(&action);
 					return;
 				}
 				int slot;
