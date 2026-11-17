@@ -11,6 +11,7 @@
 <footer><button class="blue" onclick="virtualKey('UP')">↑</button><button class="blue" onclick="virtualKey('LEFT')">←</button><button onclick="saveSlot()">SL · OK</button><button class="blue" onclick="virtualKey('RIGHT')">→</button><button class="blue" onclick="virtualKey('DOWN')">↓</button></footer>
 <div id="hint">A · B · X · Y · SL · ST  |  Vuốt trái / phải để đổi game</div>
 <div id="panel"><button class="close" onclick="closePanel()">ĐÓNG ✕</button><div id="panelBody"></div></div>
+<input id="cheatImport" type="file" accept=".txt,.cht,.json" style="display:none" onchange="importCheatFile(this.files[0])">
 <script>
 const $=id=>document.getElementById(id);let games=JSON.parse(localStorage.getItem('games')||'[]'),index=0,cheats=JSON.parse(localStorage.getItem('cheats')||'{}');
 function persist(){localStorage.setItem('games',JSON.stringify(games))}
@@ -31,10 +32,39 @@ if(which==='controls'){b.innerHTML='<h3>CÀI NÚT ĐIỀU KHIỂN</h3><div class
 if(which==='graphics'){b.innerHTML='<h3>ĐỒ HỌA & FPS</h3><label>Chế độ hiển thị</label><select id="quality"><option>Tiêu chuẩn</option><option>Phóng to màn hình</option><option>Lọc điểm ảnh (mô phỏng)</option></select><p><label>FPS mục tiêu</label><select id="fps"><option>30 FPS</option><option selected>60 FPS</option></select></p><p class="muted">Các lựa chọn này hiện chỉ lưu tùy chọn giao diện; không thay đổi bộ dựng hình của My Boy.</p><button onclick="savePrefs()">LƯU CÀI ĐẶT</button>'}
 if(which==='saves'){b.innerHTML='<h3>Ô LƯU GAME</h3><div class="slotgrid">'+Array.from({length:8},(_,i)=>'<button class="slot" onclick="storeSlot('+i+')">Ô '+(i+1)+'<small id="slot'+i+'"></small></button>').join('')+'</div><p class="muted">Các ô này lưu thông tin game và thời điểm chọn, chưa phải save-state nội bộ của giả lập.</p>'}
 if(which==='network'){let active=games[index]?.name||'';b.innerHTML='<h3>⇄ CHƠI ONLINE / OFFLINE</h3><p><b>OFFLINE · Một người chơi</b></p><p class="muted">Chạy game đã chọn trên điện thoại này, không cần mạng.</p><button onclick="closePanel();launchCurrent()">▶ CHẠY OFFLINE</button><hr style="border-color:#17485a"><p><b>ONLINE · Kết nối hai điện thoại</b></p><p class="muted">My Boy! hỗ trợ Link Remote qua Wi-Fi hoặc Bluetooth. Đây là chơi mạng cục bộ (LAN/hotspot), không phải máy chủ Internet.</p><p class="muted"><b>1.</b> Cả hai máy cài My Boy! và có ROM phù hợp. Với hai bản game khác nhau, cần có đủ cả hai ROM trên cả hai máy.</p><p class="muted"><b>2. Wi-Fi:</b> Kết nối hai máy cùng Wi-Fi hoặc bật điểm phát sóng ở một máy. Trong My Boy!, máy chủ chọn Menu → Link Remote → Wi-Fi Server; máy còn lại chọn Wi-Fi Client và nhập IP/port máy chủ hiển thị.</p><p class="muted"><b>3. Bluetooth:</b> Ghép đôi hai máy trong cài đặt Bluetooth trước, sau đó trong My Boy! một máy chọn Bluetooth Server, máy kia chọn Bluetooth Client.</p><p class="muted"><b>4.</b> Khi đã kết nối, vào khu vực Link/Cable trong game để giao dịch hoặc đấu nếu game hỗ trợ.</p><button onclick="closePanel();launchCurrent()">▶ MỞ GAME TRONG MY BOY!</button><p class="muted">Trâu Bi Non có thể mở ROM, nhưng My Boy! không cung cấp API công khai để ứng dụng này tự bật Server/Client hoặc tự ghép nối. Hãy hoàn tất các bước Link Remote trong My Boy!.</p>'}
-if(which==='cheats'){let active=games[index]?.name||'';b.innerHTML='<h3>⚡ AUTOCHEAT · '+(active?escapeHtml(active):'KHO MÃ')+'</h3><p class="muted">Game đang chọn: '+(active?escapeHtml(active):'Chưa chọn game')+'</p><input id="cheatGame" placeholder="Tên game" value="'+escapeHtml(active)+'"><input id="cheatName" placeholder="Tên cheat"><input id="cheatCode" placeholder="Mã cheat"><button onclick="addCheat()">＋ LƯU CHEAT</button><button onclick="exportCheats()">XUẤT JSON</button><button onclick="copyAllCurrentCheats()">SAO CHÉP MÃ GAME NÀY</button><button onclick="openMyBoyWithCheats()">MỞ MY BOY!</button><div id="cheatList"></div><p class="muted">AutoCheat tự lọc kho mã theo game đang chọn. Chạm SAO CHÉP để chuyển mã, sau đó thêm mã trong My Boy!. My Boy! không có API công khai để ứng dụng ngoài tự chèn mã.</p>'}
+if(which==='cheats'){let active=games[index]?.name||'';b.innerHTML='<h3>⚡ AUTOCHEAT · '+(active?escapeHtml(active):'KHO MÃ')+'</h3><p class="muted">Game đang chọn: '+(active?escapeHtml(active):'Chưa chọn game')+'</p><input id="cheatGame" placeholder="Tên game" value="'+escapeHtml(active)+'"><input id="cheatName" placeholder="Tên cheat"><input id="cheatCode" placeholder="Mã cheat"><button onclick="addCheat()">＋ LƯU CHEAT</button><button onclick="document.getElementById('cheatImport').click()">NHẬP TỆP .TXT / .CHT</button><button onclick="exportCheats()">XUẤT JSON</button><button onclick="copyAllCurrentCheats()">SAO CHÉP MÃ GAME NÀY</button><button onclick="openMyBoyWithCheats()">MỞ MY BOY!</button><div id="cheatList"></div><p class="muted">AutoCheat tự lọc kho mã theo game đang chọn. Chạm SAO CHÉP để chuyển mã, sau đó thêm mã trong My Boy!. My Boy! không có API công khai để ứng dụng ngoài tự chèn mã.</p>'}
 renderGames();renderCheatList();updateSlots()}
 function closePanel(){$('panel').style.display='none'}
 function addCheat(){let g=$('cheatGame').value.trim()||games[index]?.name||'Game chưa đặt tên',n=$('cheatName').value.trim()||'Cheat',code=$('cheatCode').value.trim();if(!code){$('cheatCode').focus();return}cheats[g]=cheats[g]||[];cheats[g].push({name:n,code:code});localStorage.setItem('cheats',JSON.stringify(cheats));$('cheatCode').value='';renderCheatList()}
+function importCheatFile(file){
+ if(!file)return;
+ const reader=new FileReader();
+ reader.onload=()=>{
+  const raw=String(reader.result||'');
+  const game=$('cheatGame')?.value.trim()||games[index]?.name||'Game chưa đặt tên';
+  let imported=[];
+  if(file.name.toLowerCase().endsWith('.json')){
+   try{const obj=JSON.parse(raw);Object.keys(obj).forEach(k=>{cheats[k]=[...(cheats[k]||[]),...(Array.isArray(obj[k])?obj[k]:[])]});}
+   catch(e){$('hint').textContent='Tệp JSON không hợp lệ';return;}
+  }else{
+   let name='',type='Chưa rõ',codes=[];
+   const flush=()=>{if(name&&codes.length)imported.push({name,code:codes.join('\n'),type});};
+   for(const line of raw.split(/\r?\n/)){
+    const h=line.trim().match(/^\d+[.)]\s*(.+?)\s*[-–]\s*(GameShark(?:\s*\/\s*Action Replay)?|Action Replay|CodeBreaker)\s*$/i);
+    if(h){flush();name=h[1].trim();type=h[2].trim();codes=[];continue;}
+    if(/^[0-9A-Fa-f]{8}\s+[0-9A-Fa-f]{4,8}$/.test(line.trim())){if(!name){name='Mã nhập từ tệp';type='Chưa rõ';}codes.push(line.trim());}
+   }
+   flush();
+   if(!imported.length){$('hint').textContent='Không đọc được mã. Hãy dùng tệp TXT có tiêu đề cheat và các dòng mã hex.';return;}
+   cheats[game]=[...(cheats[game]||[]),...imported];
+  }
+  localStorage.setItem('cheats',JSON.stringify(cheats));
+  $('hint').textContent='Đã nhập mã vào kho AutoCheat';
+  $('cheatImport').value='';
+  renderCheatList();
+ };
+ reader.readAsText(file);
+}
 function currentCheatEntries(){let name=games[index]?.name||$('cheatGame')?.value||'';let key=Object.keys(cheats).find(k=>k.trim().toLowerCase()===name.trim().toLowerCase());return key?cheats[key]:[]}
 function renderCheatList(){let e=$('cheatList');if(!e)return;let entries=currentCheatEntries();e.innerHTML=entries.map((x,i)=>'<div class="gameRow"><span><b>'+escapeHtml(x.name)+'</b><br>'+escapeHtml(x.code)+'</span><button onclick="copyOneCheat('+i+')">CHÉP</button></div>').join('')||'<p class="muted">Chưa có mã cho game này. Hãy thêm mã ở trên.</p>'}
 function copyCheatText(value){if(window.AndroidBridge&&AndroidBridge.copyText){AndroidBridge.copyText(value);$('hint').textContent='Đã sao chép mã Cheat'}else if(navigator.clipboard?.writeText){navigator.clipboard.writeText(value);$('hint').textContent='Đã sao chép mã Cheat'}else{$('hint').textContent='Thiết bị chưa hỗ trợ sao chép tự động'}}
