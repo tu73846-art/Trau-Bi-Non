@@ -79,10 +79,11 @@ function addCheat(){
  let g=$('cheatGame').value.trim()||games[index]?.name||'Game chưa đặt tên';
  let n=$('cheatName').value.trim()||'Cheat',code=$('cheatCode').value.trim();
  if(!validCheatCode(code)){$('hint').textContent='Mã chưa đúng định dạng: mỗi dòng cần 8 ký tự hex, dấu cách, rồi 4–8 ký tự hex.';$('cheatCode').focus();return}
- cheats[g]=cheats[g]||[];
- if(cheats[g].some(x=>String(x.code).trim().toLowerCase()===code.toLowerCase())){$('hint').textContent='Mã này đã có trong kho của game.';return}
- cheats[g].push({name:n,code,enabled:true});
- saveLocal('cheats',cheats);$('cheatCode').value='';$('hint').textContent='Đã lưu mã cho '+g;renderCheatList();
+ const previous=Array.isArray(cheats[g])?cheats[g].slice():[];
+ if(previous.some(x=>String(x.code).trim().toLowerCase()===code.toLowerCase())){$('hint').textContent='Mã này đã có trong kho của game.';return}
+ cheats[g]=previous.concat([{name:n,code,enabled:true}]);
+ if(!saveLocal('cheats',cheats)){if(previous.length)cheats[g]=previous;else delete cheats[g];return}
+ $('cheatCode').value='';$('hint').textContent='Đã lưu mã cho '+g;renderCheatList();
 }
 function importCheatFile(file){
  if(!file)return;
