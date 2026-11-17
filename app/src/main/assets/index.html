@@ -10,13 +10,14 @@ html,body{overscroll-behavior:none;-webkit-tap-highlight-color:transparent;touch
 </style></head><body>
 <header><span>🐃 TRÂU BI NON</span><span><button onclick="toggleSearch()">⌕ TÌM</button> <button onclick="toggleMenu()">⋮</button></span></header>
 <div id="searchbar"><input id="searchInput" placeholder="Nhập tên game để tìm..." oninput="renderGames()"><button onclick="toggleSearch()">ĐÓNG</button></div>
-<div id="menu"><button onclick="pickRom()">＋ Thêm game / ROM</button><button onclick="openPanel('library')">▤ Thư viện game</button><button onclick="openPanel('controls')">⌖ Cài nút điều khiển</button><button onclick="openPanel('graphics')">◈ Đồ họa & FPS</button><button onclick="openPanel('saves')">▣ Ô lưu game</button><button onclick="openPanel('cheats')">⚡ AutoCheat · Kho mã</button><button onclick="openPanel('network')">⇄ Chơi Online / Offline</button><button onclick="openMyBoy()">▶ Mở My Boy!</button></div>
+<div id="menu"><button onclick="pickRom()">＋ Thêm game / ROM</button><button onclick="openPanel('library')">▤ Thư viện game</button><button onclick="openPanel('controls')">⌖ Cài nút điều khiển</button><button onclick="openPanel('graphics')">◈ Đồ họa & FPS</button><button onclick="openPanel('saves')">▣ Ô lưu game</button><button onclick="openPanel('cheats')">⚡ AutoCheat · Kho mã</button><button onclick="openPanel('network')">⇄ Chơi Online / Offline</button><button onclick="openBackupPanel()">▣ Sao lưu / Khôi phục</button><button onclick="openMyBoy()">▶ Mở My Boy!</button></div>
 <main><div class="tile" id="prev" onclick="shift(-1)">TRƯỚC</div><div class="tile big" id="current">CHƯA CÓ GAME<small>Thêm ROM để bắt đầu</small></div><div class="tile" id="next" onclick="shift(1)">TIẾP</div></main>
 <div class="actions"><button onclick="pickRom()">＋ THÊM GAME</button><button onclick="launchCurrent()">▶ CHẠY GAME</button><button onclick="openMyBoy()">MY BOY!</button></div>
 <footer><button class="blue" onclick="virtualKey('UP')">↑</button><button class="blue" onclick="virtualKey('LEFT')">←</button><button onclick="saveSlot()">SL · OK</button><button class="blue" onclick="virtualKey('RIGHT')">→</button><button class="blue" onclick="virtualKey('DOWN')">↓</button></footer>
 <div id="hint">A · B · X · Y · SL · ST  |  Vuốt trái / phải để đổi game</div>
 <div id="panel"><button class="close" onclick="closePanel()">ĐÓNG ✕</button><div id="panelBody"></div></div>
 <input id="cheatImport" type="file" accept=".txt,.cht,.json" style="display:none" onchange="importCheatFile(this.files[0])">
+<input id="backupImport" type="file" accept=".json,application/json" style="display:none" onchange="importBackupFile(this.files[0])">
 <script>
 const $=id=>document.getElementById(id);
 function safeLoad(key,fallback){try{const value=JSON.parse(localStorage.getItem(key));return value===null?fallback:value}catch(e){return fallback}}
@@ -136,6 +137,32 @@ function openMyBoyWithCheats(){let xs=currentCheatEntries();if(!xs.length){$('hi
 function exportCheats(){let blob=new Blob([JSON.stringify(cheats,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='trau-bi-non-cheats.json';a.click();URL.revokeObjectURL(a.href)}
 function exportCheatCht(){let game=games[index]?.name||$('cheatGame')?.value||'game';let entries=currentCheatEntries();if(!entries.length){$('hint').textContent='Chưa có mã để xuất';return}let body=entries.map(x=>'['+String(x.name||'Cheat').replace(/[\\r\\n\\[\\]]/g,' ')+']\\n'+(x.enabled===false?'!disabled\\n':'')+x.code).join('\\n\\n');let blob=new Blob([body],{type:'text/plain'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=game.replace(/[^A-Za-z0-9._-]/g,'_')+'.cht';a.click();URL.revokeObjectURL(a.href);$('hint').textContent='Đã xuất .CHT. Có thể nhập thủ công vào ứng dụng hỗ trợ định dạng này.'}
 function searchCheatsOnline(){let game=games[index]?.name||$('cheatGame')?.value||'';if(!game.trim()){$('hint').textContent='Chọn game trước khi tìm mã';return}if(window.AndroidBridge?.searchCheats){AndroidBridge.searchCheats(game);$('hint').textContent='Đã mở tìm kiếm cheat cho '+game+'. Hãy kiểm tra mã và nhập tệp về đây.'}else{window.open('https://www.google.com/search?q='+encodeURIComponent(game+' GBA cheats GameShark'),'_blank')}}
+function exportBackup(){
+ const payload={app:'TrauBiNon',version:1,createdAt:new Date().toISOString(),games,cheats,graphics:safeLoad('graphics',{quality:'normal',fps:'60'})};
+ const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
+ const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='trau-bi-non-backup.json';a.click();
+ setTimeout(()=>URL.revokeObjectURL(url),1000);$('hint').textContent='Đã xuất bản sao lưu thư viện, AutoCheat và cài đặt.';
+}
+function importBackupFile(file){
+ if(!file)return;const reader=new FileReader();
+ reader.onload=()=>{
+  try{
+   const data=JSON.parse(String(reader.result||''));
+   if(!data||data.app!=='TrauBiNon'||!Array.isArray(data.games)||!data.cheats||typeof data.cheats!=='object'||Array.isArray(data.cheats))throw new Error('Sai định dạng bản sao lưu');
+   const nextGames=data.games.filter(g=>g&&typeof g.name==='string'&&typeof g.uri==='string'&&g.uri.trim()).map(g=>({name:g.name,uri:g.uri}));
+   const nextCheats={};Object.keys(data.cheats).forEach(k=>{const rows=Array.isArray(data.cheats[k])?data.cheats[k]:[];nextCheats[k]=rows.map((x,i)=>normalizeCheatEntry(x,i)).filter(x=>x&&validCheatCode(x.code));});
+   const nextGraphics=data.graphics&&typeof data.graphics==='object'?{quality:String(data.graphics.quality||'normal'),fps:['30','60'].includes(String(data.graphics.fps))?String(data.graphics.fps):'60'}:{quality:'normal',fps:'60'};
+   const keys=['games','cheats','graphics'],values=[nextGames,nextCheats,nextGraphics],old=keys.map(k=>localStorage.getItem(k));
+   try{keys.forEach((k,i)=>localStorage.setItem(k,JSON.stringify(values[i])))}catch(writeError){keys.forEach((k,i)=>{try{if(old[i]===null)localStorage.removeItem(k);else localStorage.setItem(k,old[i])}catch(ignore){}});throw new Error('Không đủ bộ nhớ để khôi phục; dữ liệu cũ được giữ nguyên.')}
+   games=nextGames;cheats=nextCheats;index=0;renderGames();$('hint').textContent='Đã khôi phục '+games.length+' game và kho AutoCheat.';
+  }catch(e){$('hint').textContent='Không thể khôi phục: '+e.message}
+  $('backupImport').value='';
+ };reader.onerror=()=>{$('hint').textContent='Không đọc được tệp sao lưu.'};reader.readAsText(file);
+}
+function openBackupPanel(){
+ openPanel('backup');
+ $('panelBody').innerHTML='<h3>Sao lưu / Khôi phục</h3><p class="muted">Lưu thư viện ROM, mã AutoCheat và cài đặt đồ họa/FPS vào một tệp JSON. Tệp ROM và save-state không được chép vào bản sao lưu.</p><button onclick="exportBackup()">XUẤT BẢN SAO LƯU</button><button onclick="document.getElementById(\'backupImport\').click()">KHÔI PHỤC TỪ TỆP</button>';
+}
 function saveSlot(){openPanel('saves')}
 function updateSlots(){}
 function savePrefs(){saveLocal('graphics',{quality:$('quality').value,fps:$('fps').value});$('hint').textContent='Đã lưu đồ họa và FPS · áp dụng khi mở game tiếp theo'}
