@@ -53,7 +53,7 @@ function removeGameByUri(u){
  const key=Object.keys(cheats).find(k=>k.trim().toLowerCase()===name.trim().toLowerCase());
  if(key)delete cheats[key];
  if(index>=games.length)index=Math.max(0,games.length-1);
- if(!saveLocal('games',games)||(key&&!saveLocal('cheats',cheats))){games=oldGames;cheats=oldCheats;index=Math.min(at,games.length-1);renderGames();renderCheatList();return}
+ if((key&&!saveLocal('cheats',cheats))||!saveLocal('games',games)){games=oldGames;cheats=oldCheats;index=Math.min(at,games.length-1);if(key)saveLocal('cheats',oldCheats);saveLocal('games',oldGames);renderGames();renderCheatList();return}
  renderGames();renderCheatList();
  $('hint').textContent='Đã xóa '+name+' khỏi thư viện.';
 }
