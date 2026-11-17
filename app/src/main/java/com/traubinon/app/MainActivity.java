@@ -21,7 +21,8 @@ import java.io.FileOutputStream;
 import java.io.InputStream;
 
 public class MainActivity extends Activity {
-  private static final int PICK_ROM = 410;\n  private static final int PICK_ROM_FOLDER = 411;
+  private static final int PICK_ROM = 410;
+  private static final int PICK_ROM_FOLDER = 411;
   private static final String MYBOY_PACKAGE = "com.fastemulator.gba";
   private WebView web;
 
@@ -50,7 +51,15 @@ public class MainActivity extends Activity {
       });
     }
 
-    @JavascriptInterface public void pickRomFolder() {\n      runOnUiThread(() -> {\n        Intent i = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);\n        i.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);\n        startActivityForResult(i, PICK_ROM_FOLDER);\n      });\n    }\n\n    @JavascriptInterface public boolean isMyBoyInstalled() {
+    @JavascriptInterface public void pickRomFolder() {
+      runOnUiThread(() -> {
+        Intent i = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
+        i.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
+        startActivityForResult(i, PICK_ROM_FOLDER);
+      });
+    }
+
+    @JavascriptInterface public boolean isMyBoyInstalled() {
       try {
         return getPackageManager().getPackageInfo(MYBOY_PACKAGE, 0) != null;
       } catch (Exception ignored) {
@@ -151,7 +160,41 @@ public class MainActivity extends Activity {
     }
   }
 
-  private void scanRomFolder(Uri treeUri) {\n    JSONArray found = new JSONArray();\n    try {\n      getContentResolver().takePersistableUriPermission(treeUri, Intent.FLAG_GRANT_READ_URI_PERMISSION);\n      scanDocuments(treeUri, DocumentsContract.getTreeDocumentId(treeUri), found, 0);\n      if (web != null) {\n        String payload = found.toString();\n        web.post(() -> web.evaluateJavascript(\"addGamesFromAndroid(\" + JSONObject.quote(payload) + \")\", null));\n      }\n      Toast.makeText(this, \"Đã tìm thấy \" + found.length() + \" game GBA.\", Toast.LENGTH_LONG).show();\n    } catch (Exception e) {\n      Toast.makeText(this, \"Không quét được thư mục: \" + e.getMessage(), Toast.LENGTH_LONG).show();\n    }\n  }\n\n  private void scanDocuments(Uri treeUri, String parentId, JSONArray found, int depth) throws Exception {\n    if (depth > 5 || found.length() >= 1000) return;\n    Uri children = DocumentsContract.buildChildDocumentsUriUsingTree(treeUri, parentId);\n    String[] columns = {DocumentsContract.Document.COLUMN_DOCUMENT_ID, DocumentsContract.Document.COLUMN_DISPLAY_NAME, DocumentsContract.Document.COLUMN_MIME_TYPE};\n    try (Cursor cur = getContentResolver().query(children, columns, null, null, null)) {\n      if (cur == null) return;\n      while (cur.moveToNext() && found.length() < 1000) {\n        String id = cur.getString(0), name = cur.getString(1);\n        String mime = cur.getString(2);\n        if (DocumentsContract.Document.MIME_TYPE_DIR.equals(mime)) { scanDocuments(treeUri, id, found, depth + 1); continue; }\n        if (name == null) continue;\n        String lower = name.toLowerCase(java.util.Locale.ROOT);\n        if (!(lower.endsWith(\".gba\") || lower.endsWith(\".gbc\") || lower.endsWith(\".gb\") || lower.endsWith(\".zip\"))) continue;\n        Uri fileUri = DocumentsContract.buildDocumentUriUsingTree(treeUri, id);\n        JSONObject item = new JSONObject(); item.put(\"name\", name); item.put(\"uri\", fileUri.toString()); found.put(item);\n      }\n    }\n  }\n\n  private String displayName(Uri uri) {
+  private void scanRomFolder(Uri treeUri) {
+    JSONArray found = new JSONArray();
+    try {
+      getContentResolver().takePersistableUriPermission(treeUri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
+      scanDocuments(treeUri, DocumentsContract.getTreeDocumentId(treeUri), found, 0);
+      if (web != null) {
+        String payload = found.toString();
+        web.post(() -> web.evaluateJavascript(\"addGamesFromAndroid(\" + JSONObject.quote(payload) + \")\", null));
+      }
+      Toast.makeText(this, \"Đã tìm thấy \" + found.length() + \" game GBA.\", Toast.LENGTH_LONG).show();
+    } catch (Exception e) {
+      Toast.makeText(this, \"Không quét được thư mục: \" + e.getMessage(), Toast.LENGTH_LONG).show();
+    }
+  }
+
+  private void scanDocuments(Uri treeUri, String parentId, JSONArray found, int depth) throws Exception {
+    if (depth > 5 || found.length() >= 1000) return;
+    Uri children = DocumentsContract.buildChildDocumentsUriUsingTree(treeUri, parentId);
+    String[] columns = {DocumentsContract.Document.COLUMN_DOCUMENT_ID, DocumentsContract.Document.COLUMN_DISPLAY_NAME, DocumentsContract.Document.COLUMN_MIME_TYPE};
+    try (Cursor cur = getContentResolver().query(children, columns, null, null, null)) {
+      if (cur == null) return;
+      while (cur.moveToNext() && found.length() < 1000) {
+        String id = cur.getString(0), name = cur.getString(1);
+        String mime = cur.getString(2);
+        if (DocumentsContract.Document.MIME_TYPE_DIR.equals(mime)) { scanDocuments(treeUri, id, found, depth + 1); continue; }
+        if (name == null) continue;
+        String lower = name.toLowerCase(java.util.Locale.ROOT);
+        if (!(lower.endsWith(\".gba\") || lower.endsWith(\".gbc\") || lower.endsWith(\".gb\") || lower.endsWith(\".zip\"))) continue;
+        Uri fileUri = DocumentsContract.buildDocumentUriUsingTree(treeUri, id);
+        JSONObject item = new JSONObject(); item.put(\"name\", name); item.put(\"uri\", fileUri.toString()); found.put(item);
+      }
+    }
+  }
+
+  private String displayName(Uri uri) {
     String name = null;
     try (Cursor c = getContentResolver().query(uri, null, null, null, null)) {
       if (c != null && c.moveToFirst()) {
@@ -210,7 +253,11 @@ public class MainActivity extends Activity {
 
   @Override protected void onActivityResult(int requestCode, int resultCode, Intent data) {
     super.onActivityResult(requestCode, resultCode, data);
-    if (requestCode == PICK_ROM_FOLDER && resultCode == RESULT_OK && data != null && data.getData() != null) {\n      scanRomFolder(data.getData());\n      return;\n    }\n    if (requestCode == PICK_ROM && resultCode == RESULT_OK && data != null && data.getData() != null) {
+    if (requestCode == PICK_ROM_FOLDER && resultCode == RESULT_OK && data != null && data.getData() != null) {
+      scanRomFolder(data.getData());
+      return;
+    }
+    if (requestCode == PICK_ROM && resultCode == RESULT_OK && data != null && data.getData() != null) {
       Uri uri = data.getData();
       try { getContentResolver().takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION); }
       catch (SecurityException ignored) { }
