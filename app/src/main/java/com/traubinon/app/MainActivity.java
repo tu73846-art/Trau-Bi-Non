@@ -83,6 +83,20 @@ public class MainActivity extends Activity {
       });
     }
 
+
+    @JavascriptInterface public void searchCheats(String gameName) {
+      runOnUiThread(() -> {
+        try {
+          String query = (gameName == null ? "" : gameName) + " GBA cheats GameShark";
+          Intent i = new Intent(Intent.ACTION_VIEW,
+              Uri.parse("https://www.google.com/search?q=" + Uri.encode(query)));
+          startActivity(i);
+        } catch (Exception e) {
+          Toast.makeText(MainActivity.this, "Không mở được tìm kiếm cheat.", Toast.LENGTH_LONG).show();
+        }
+      });
+    }
+
     @JavascriptInterface public void saveCheats(String gameName, String content) {
       runOnUiThread(() -> {
         try {
