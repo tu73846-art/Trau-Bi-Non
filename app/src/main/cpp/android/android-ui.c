@@ -535,8 +535,9 @@ void mAndroidOverlayDraw(SDL_Renderer* renderer, const SDL_Rect* view) {
 	if (overlay.hidden) {
 		return;
 	}
+	// Use the same rectangles for drawing and hit-testing so touch targets align.
 	struct OverlayButton buttons[16];
-	int n = _layout(view, buttons);
+	int n = _layout(NULL, buttons);
 	int i;
 	for (i = 0; i < n; ++i) {
 		SDL_SetRenderDrawColor(renderer, 4, 35, 52, 170);
