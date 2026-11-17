@@ -167,11 +167,11 @@ public class MainActivity extends Activity {
       scanDocuments(treeUri, DocumentsContract.getTreeDocumentId(treeUri), found, 0);
       if (web != null) {
         String payload = found.toString();
-        web.post(() -> web.evaluateJavascript(\"addGamesFromAndroid(\" + JSONObject.quote(payload) + \")\", null));
+        web.post(() -> web.evaluateJavascript("addGamesFromAndroid(" + JSONObject.quote(payload) + ")", null));
       }
-      Toast.makeText(this, \"Đã tìm thấy \" + found.length() + \" game GBA.\", Toast.LENGTH_LONG).show();
+      Toast.makeText(this, "Đã tìm thấy " + found.length() + " game GBA.", Toast.LENGTH_LONG).show();
     } catch (Exception e) {
-      Toast.makeText(this, \"Không quét được thư mục: \" + e.getMessage(), Toast.LENGTH_LONG).show();
+      Toast.makeText(this, "Không quét được thư mục: " + e.getMessage(), Toast.LENGTH_LONG).show();
     }
   }
 
@@ -187,9 +187,9 @@ public class MainActivity extends Activity {
         if (DocumentsContract.Document.MIME_TYPE_DIR.equals(mime)) { scanDocuments(treeUri, id, found, depth + 1); continue; }
         if (name == null) continue;
         String lower = name.toLowerCase(java.util.Locale.ROOT);
-        if (!(lower.endsWith(\".gba\") || lower.endsWith(\".gbc\") || lower.endsWith(\".gb\") || lower.endsWith(\".zip\"))) continue;
+        if (!(lower.endsWith(".gba") || lower.endsWith(".gbc") || lower.endsWith(".gb") || lower.endsWith(".zip"))) continue;
         Uri fileUri = DocumentsContract.buildDocumentUriUsingTree(treeUri, id);
-        JSONObject item = new JSONObject(); item.put(\"name\", name); item.put(\"uri\", fileUri.toString()); found.put(item);
+        JSONObject item = new JSONObject(); item.put("name", name); item.put("uri", fileUri.toString()); found.put(item);
       }
     }
   }
