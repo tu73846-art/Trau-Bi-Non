@@ -152,8 +152,9 @@ function copyAllCurrentCheats(){let xs=currentCheatEntries();if(xs.length)copyCh
 function openMyBoyWithCheats(){let xs=currentCheatEntries();if(!xs.length){$('hint').textContent='Chưa có mã cho game đang chọn';return}copyCheatText(xs.map(x=>x.name+'\n'+x.code).join('\n\n'));launchMyBoyCurrent()}
 function exportCheats(){let blob=new Blob([JSON.stringify(cheats,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='trau-bi-non-cheats.json';a.click();URL.revokeObjectURL(a.href)}
 function exportCheatCht(){let game=games[index]?.name||$('cheatGame')?.value||'game';let entries=currentCheatEntries();if(!entries.length){$('hint').textContent='Chưa có mã để xuất';return}let body=entries.map(x=>'['+String(x.name||'Cheat').replace(/[\\r\\n\\[\\]]/g,' ')+']\\n'+(x.enabled===false?'!disabled\\n':'')+x.code).join('\\n\\n');let blob=new Blob([body],{type:'text/plain'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=game.replace(/[^A-Za-z0-9._-]/g,'_')+'.cht';a.click();URL.revokeObjectURL(a.href);$('hint').textContent='Đã xuất .CHT. Có thể nhập thủ công vào ứng dụng hỗ trợ định dạng này.'}
+let onlineCheatMatches=[];
 function normalizeCheatTitle(value){
- return String(value||'').replace(/\\.(gba|gbc|gb)$/i,'').replace(/\\([^)]*\\)|\\[[^\\]]*\\]/g,' ').normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim().replace(/\\s+/g,' ');
+ return String(value||'').replace(/\.(gba|gbc|gb|cht)$/i,'').replace(/\([^)]*\)|\[[^\]]*\]/g,' ').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim().replace(/\s+/g,' ');
 }
 async function searchCheatsOnline(){
  const game=games[index]?.name||$('cheatGame')?.value||'';
@@ -167,17 +168,16 @@ async function searchCheatsOnline(){
   if(!response.ok)throw new Error('Kho mã trả về HTTP '+response.status);
   const files=await response.json();
   const tokens=target.split(' ').filter(x=>x.length>1&&!['the','and','for','gba','game'].includes(x));
-  const matches=files.filter(f=>f.type==='file'&&/\\.cht$/i.test(f.name)).map(f=>{
-   const title=normalizeCheatTitle(f.name);
-   const words=new Set(title.split(' ').filter(x=>x.length>1));
-   const overlap=tokens.filter(x=>words.has(x)).length;
-   const score=tokens.length?overlap/tokens.length:0;
+  const matches=files.filter(f=>f.type==='file'&&/\.cht$/i.test(f.name)).map(f=>{
+   const title=normalizeCheatTitle(f.name),words=new Set(title.split(' ').filter(x=>x.length>1));
+   const overlap=tokens.filter(x=>words.has(x)).length,score=tokens.length?overlap/tokens.length:0;
    const exact=title===target||title.startsWith(target+' ');
    return {file:f,score:exact?2:score};
   }).filter(x=>x.score>=0.5).sort((a,b)=>b.score-a.score||a.file.name.localeCompare(b.file.name)).slice(0,12);
   if(!box)return;
-  if(!matches.length){box.innerHTML='<p class="muted">Chưa tìm thấy tệp khớp tên game trong kho GBA. Bạn có thể thử tên game ngắn hơn hoặc thêm mã thủ công.</p>';$('hint').textContent='Không tìm thấy mã phù hợp cho '+game;return}
-  box.innerHTML='<h3>KẾT QUẢ KHO CHEAT ('+matches.length+')</h3>'+matches.map(x=>'<div class="gameRow"><span>'+escapeHtml(x.file.name)+'<br><small class="muted">'+(x.score===2?'Khớp tên':'Khớp gần đúng')+'</small></span><button onclick="downloadCheatFile(\\''+encodeURIComponent(x.file.download_url)+'\\',\\''+encodeURIComponent(x.file.name)+'\\')">TẢI MÃ</button></div>').join('');
+  onlineCheatMatches=matches.map(x=>x.file);
+  if(!matches.length){box.innerHTML='<p class="muted">Chưa tìm thấy tệp khớp tên game trong kho GBA. Thử tên game ngắn hơn hoặc thêm mã thủ công.</p>';$('hint').textContent='Không tìm thấy mã phù hợp cho '+game;return}
+  box.innerHTML='<h3>KẾT QUẢ KHO CHEAT ('+matches.length+')</h3>'+matches.map((x,i)=>'<div class="gameRow"><span>'+escapeHtml(x.file.name)+'<br><small class="muted">'+(x.score===2?'Khớp tên':'Khớp gần đúng')+'</small></span><button onclick="downloadCheatFile('+i+')">TẢI MÃ</button></div>').join('');
   $('hint').textContent='Tìm thấy '+matches.length+' tệp mã. Chọn TẢI MÃ để nhập vào AutoCheat.';
  }catch(e){
   if(box)box.innerHTML='<p class="muted">Không kết nối được kho mã. Kiểm tra Internet rồi thử lại. ('+escapeHtml(e.message)+')</p>';
@@ -186,40 +186,39 @@ async function searchCheatsOnline(){
 }
 function parseLibretroCheatFile(raw){
  const rows=new Map();
- String(raw||'').split(/\\r?\\n/).forEach(line=>{
-  const m=line.match(/^\\s*cheat(\\d+)_(desc|code|enable)\\s*=\\s*(.*?)\\s*$/i);
+ String(raw||'').split(/\r?\n/).forEach(line=>{
+  const m=line.match(/^\s*cheat(\d+)_(desc|code|enable)\s*=\s*(.*?)\s*$/i);
   if(!m)return;
   const id=Number(m[1]),field=m[2].toLowerCase();
   let value=m[3].trim();
-  if(value.startsWith('"')&&value.endsWith('"'))value=value.slice(1,-1).replace(/\\\\(["\\\\])/g,'$1');
+  if(value.startsWith('"')&&value.endsWith('"'))value=value.slice(1,-1).replace(/\\(["\\])/g,'$1');
   if(!rows.has(id))rows.set(id,{name:'',code:'',enabled:false});
   rows.get(id)[field==='desc'?'name':field==='code'?'code':'enabled']=field==='enable'?value.toLowerCase()==='true':value;
  });
  const result=[];
  [...rows.entries()].sort((a,b)=>a[0]-b[0]).forEach(([id,row])=>{
   const rawCode=String(row.code||'').trim();
-  let chunks=rawCode.split(/\\s*\\+\\s*/).filter(Boolean);
-  if(chunks.length===1)chunks=rawCode.trim().split(/\\s+/).filter(Boolean);
-  let lines=[];
+  let chunks=rawCode.split(/\s*\+\s*/).filter(Boolean);
+  if(chunks.length===1)chunks=rawCode.split(/\s+/).filter(Boolean);
+  const lines=[];
   if(chunks.length>=2&&chunks.length%2===0){
    for(let i=0;i<chunks.length;i+=2){
     if(/^[0-9a-f]{8}$/i.test(chunks[i])&&/^[0-9a-f]{4,8}$/i.test(chunks[i+1]))lines.push(chunks[i].toUpperCase()+' '+chunks[i+1].toUpperCase());
    }
   }
-  const code=lines.join('\\n');
+  const code=lines.join('\n');
   if(code&&validCheatCode(code))result.push({name:String(row.name||('Cheat '+(id+1))).slice(0,100),code,enabled:false});
  });
  return result;
 }
-async function downloadCheatFile(encodedUrl,encodedName){
+async function downloadCheatFile(indexInResults){
  const game=games[index]?.name||$('cheatGame')?.value||'';
  if(!game){$('hint').textContent='Chọn game trước khi tải mã';return}
- let url='',name='';
- try{url=decodeURIComponent(encodedUrl);name=decodeURIComponent(encodedName)}catch(e){$('hint').textContent='Đường dẫn tệp không hợp lệ';return}
- if(!url.startsWith('https://raw.githubusercontent.com/libretro/libretro-database/')){$('hint').textContent='Nguồn tải không được xác thực';return}
- $('hint').textContent='Đang tải mã: '+name;
+ const file=onlineCheatMatches[indexInResults];
+ if(!file||!String(file.download_url||'').startsWith('https://raw.githubusercontent.com/libretro/libretro-database/')){$('hint').textContent='Nguồn tải không được xác thực';return}
+ $('hint').textContent='Đang tải mã: '+file.name;
  try{
-  const response=await fetch(url);if(!response.ok)throw new Error('HTTP '+response.status);
+  const response=await fetch(file.download_url);if(!response.ok)throw new Error('HTTP '+response.status);
   const text=await response.text(),downloaded=parseLibretroCheatFile(text);
   if(!downloaded.length)throw new Error('Tệp không có mã tương thích với mGBA');
   const previous=Array.isArray(cheats[game])?cheats[game].slice():[];
