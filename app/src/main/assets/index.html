@@ -165,8 +165,20 @@ function importBackupFile(file){
   try{
    const data=JSON.parse(String(reader.result||''));
    if(!data||data.app!=='TrauBiNon'||!Array.isArray(data.games)||!data.cheats||typeof data.cheats!=='object'||Array.isArray(data.cheats))throw new Error('Sai định dạng bản sao lưu');
-   const nextGames=data.games.filter(g=>g&&typeof g.name==='string'&&typeof g.uri==='string'&&g.uri.trim()).map(g=>({name:g.name,uri:g.uri}));
-   const nextCheats={};Object.keys(data.cheats).forEach(k=>{const rows=Array.isArray(data.cheats[k])?data.cheats[k]:[];nextCheats[k]=rows.map((x,i)=>normalizeCheatEntry(x,i)).filter(x=>x&&validCheatCode(x.code));});
+   const seenUris=new Set();
+   const nextGames=data.games.filter(g=>{
+    if(!g||typeof g.name!=='string'||typeof g.uri!=='string')return false;
+    const name=g.name.trim().slice(0,180),uri=g.uri.trim();
+    if(!name||!uri||seenUris.has(uri))return false;
+    seenUris.add(uri);return true;
+   }).map(g=>({name:g.name.trim().slice(0,180),uri:g.uri.trim()}));
+   const nextCheats={};Object.keys(data.cheats).forEach(k=>{
+    const seenCodes=new Set(),rows=Array.isArray(data.cheats[k])?data.cheats[k]:[];
+    nextCheats[String(k).slice(0,180)]=rows.map((x,i)=>normalizeCheatEntry(x,i)).filter(x=>{
+     if(!x||!validCheatCode(x.code))return false;
+     const code=x.code.toLowerCase();if(seenCodes.has(code))return false;seenCodes.add(code);return true;
+    });
+   });
    const nextGraphics=data.graphics&&typeof data.graphics==='object'?{quality:['Tiêu chuẩn','Lọc hình ảnh (mGBA)'].includes(String(data.graphics.quality))?String(data.graphics.quality):'Tiêu chuẩn',fps:['30 FPS','60 FPS'].includes(String(data.graphics.fps))?String(data.graphics.fps):'60 FPS'}:{quality:'Tiêu chuẩn',fps:'60 FPS'};
    const keys=['games','cheats','graphics'],values=[nextGames,nextCheats,nextGraphics],old=keys.map(k=>localStorage.getItem(k));
    try{keys.forEach((k,i)=>localStorage.setItem(k,JSON.stringify(values[i])))}catch(writeError){keys.forEach((k,i)=>{try{if(old[i]===null)localStorage.removeItem(k);else localStorage.setItem(k,old[i])}catch(ignore){}});throw new Error('Không đủ bộ nhớ để khôi phục; dữ liệu cũ được giữ nguyên.')}
@@ -181,7 +193,7 @@ function openBackupPanel(){
 }
 function saveSlot(){openPanel('saves')}
 function updateSlots(){}
-function savePrefs(){saveLocal('graphics',{quality:$('quality').value,fps:$('fps').value});$('hint').textContent='Đã lưu đồ họa và FPS · áp dụng khi mở game tiếp theo'}
+function savePrefs(){if(!saveLocal('graphics',{quality:$('quality').value,fps:$('fps').value}))return;$('hint').textContent='Đã lưu đồ họa và FPS · áp dụng khi mở game tiếp theo'}
 function virtualKey(k){$('hint').textContent='Nút '+k+' được nhấn · cần lõi giả lập để điều khiển game'}
 let startX=0,startY=0,swipeEligible=false;document.addEventListener('touchstart',e=>{const t=e.target;swipeEligible=!!t.closest('main,.tile')&&!t.closest('button,input,select,textarea');if(swipeEligible){startX=e.changedTouches[0].screenX;startY=e.changedTouches[0].screenY}},{passive:true});document.addEventListener('touchend',e=>{if(!swipeEligible)return;swipeEligible=false;const dx=e.changedTouches[0].screenX-startX,dy=e.changedTouches[0].screenY-startY;if(Math.abs(dx)>65&&Math.abs(dx)>Math.abs(dy)*1.25)shift(dx<0?1:-1)},{passive:true});document.addEventListener('keydown',e=>{if(e.key==='Escape'){closePanel();$('menu').style.display='none';$('searchbar').style.display='none'}});
 renderGames();
