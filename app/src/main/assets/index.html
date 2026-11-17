@@ -18,8 +18,13 @@ html,body{overscroll-behavior:none;-webkit-tap-highlight-color:transparent;touch
 <div id="panel"><button class="close" onclick="closePanel()">ĐÓNG ✕</button><div id="panelBody"></div></div>
 <input id="cheatImport" type="file" accept=".txt,.cht,.json" style="display:none" onchange="importCheatFile(this.files[0])">
 <script>
-const $=id=>document.getElementById(id);let games=JSON.parse(localStorage.getItem('games')||'[]'),index=0,cheats=JSON.parse(localStorage.getItem('cheats')||'{}');
-function persist(){localStorage.setItem('games',JSON.stringify(games))}
+const $=id=>document.getElementById(id);
+function safeLoad(key,fallback){try{const value=JSON.parse(localStorage.getItem(key));return value===null?fallback:value}catch(e){return fallback}}
+function saveLocal(key,value){try{localStorage.setItem(key,typeof value==='string'?value:JSON.stringify(value));return true}catch(e){$('hint').textContent='Bộ nhớ ứng dụng đã đầy hoặc không thể ghi dữ liệu. Hãy giải phóng dung lượng rồi thử lại.';return false}}
+let games=safeLoad('games',[]),index=0,cheats=safeLoad('cheats',{});
+if(!Array.isArray(games))games=[];
+if(!cheats||typeof cheats!=='object'||Array.isArray(cheats))cheats={};
+function persist(){saveLocal('games',games)}
 function toggleMenu(){ $('menu').style.display=$('menu').style.display==='block'?'none':'block'}
 function toggleSearch(){ $('searchbar').style.display=$('searchbar').style.display==='block'?'none':'block';if($('searchbar').style.display==='block')$('searchInput').focus();else{$('searchInput').value='';renderGames()}}
 function pickRom(){ $('menu').style.display='none';if(window.AndroidBridge)AndroidBridge.pickRom();else alert('Chọn ROM cần chạy trên bản Android.')}
@@ -34,13 +39,13 @@ function removeGameByUri(u){
  if(!confirm('Xóa '+name+' khỏi thư viện Trâu Bi Non? Tệp ROM gốc và save-state trong ứng dụng không bị xóa.'))return;
  games.splice(at,1);
  const key=Object.keys(cheats).find(k=>k.trim().toLowerCase()===name.trim().toLowerCase());
- if(key){delete cheats[key];localStorage.setItem('cheats',JSON.stringify(cheats))}
+ if(key){delete cheats[key];saveLocal('cheats',cheats)}
  if(index>=games.length)index=Math.max(0,games.length-1);
  persist();renderGames();renderCheatList();
  $('hint').textContent='Đã xóa '+name+' khỏi thư viện.';
 }
 function shift(d){if(!games.length)return;index=(index+d+games.length)%games.length;renderGames()}
-function launchCurrent(){let g=games[index];if(!g){pickRom();return}let p=JSON.parse(localStorage.getItem('graphics')||'{}');let quality=p.quality||'Tiêu chuẩn',fps=p.fps||'60 FPS';if(window.AndroidBridge)AndroidBridge.openRom(g.uri,quality,fps);else alert('Chỉ chạy ROM trong ứng dụng Android.')}
+function launchCurrent(){let g=games[index];if(!g){pickRom();return}let p=safeLoad('graphics',{});let quality=p.quality||'Tiêu chuẩn',fps=p.fps||'60 FPS';if(window.AndroidBridge)AndroidBridge.openRom(g.uri,quality,fps);else alert('Chỉ chạy ROM trong ứng dụng Android.')}
 function openMyBoy(){ $('menu').style.display='none';if(window.AndroidBridge)AndroidBridge.openMyBoy();else alert('Chỉ có trên Android.')}
 function launchMyBoyCurrent(){let g=games[index];if(!g){$('hint').textContent='Hãy thêm và chọn ROM trước';return}if(window.AndroidBridge&&AndroidBridge.openRomInMyBoy){AndroidBridge.openRomInMyBoy(g.uri);$('hint').textContent='Đang mở '+g.name+' trong My Boy!'}else{$('hint').textContent='Cần cài My Boy! để mở ROM trực tiếp'}}
 function launchOnline(){let g=games[index];if(!g){$('hint').textContent='Hãy thêm và chọn ROM trước khi kết nối';closePanel();pickRom();return}$('hint').textContent='Đang mở '+g.name+' trong My Boy! · Thiết lập Link Cable trên My Boy!';closePanel();launchMyBoyCurrent()}
@@ -133,7 +138,7 @@ function exportCheatCht(){let game=games[index]?.name||$('cheatGame')?.value||'g
 function searchCheatsOnline(){let game=games[index]?.name||$('cheatGame')?.value||'';if(!game.trim()){$('hint').textContent='Chọn game trước khi tìm mã';return}if(window.AndroidBridge?.searchCheats){AndroidBridge.searchCheats(game);$('hint').textContent='Đã mở tìm kiếm cheat cho '+game+'. Hãy kiểm tra mã và nhập tệp về đây.'}else{window.open('https://www.google.com/search?q='+encodeURIComponent(game+' GBA cheats GameShark'),'_blank')}}
 function saveSlot(){openPanel('saves')}
 function updateSlots(){}
-function savePrefs(){localStorage.setItem('graphics',JSON.stringify({quality:$('quality').value,fps:$('fps').value}));$('hint').textContent='Đã lưu đồ họa và FPS · áp dụng khi mở game tiếp theo'}
+function savePrefs(){saveLocal('graphics',{quality:$('quality').value,fps:$('fps').value});$('hint').textContent='Đã lưu đồ họa và FPS · áp dụng khi mở game tiếp theo'}
 function virtualKey(k){$('hint').textContent='Nút '+k+' được nhấn · cần lõi giả lập để điều khiển game'}
 let startX=0,startY=0,swipeEligible=false;document.addEventListener('touchstart',e=>{const t=e.target;swipeEligible=!!t.closest('main,.tile')&&!t.closest('button,input,select,textarea');if(swipeEligible){startX=e.changedTouches[0].screenX;startY=e.changedTouches[0].screenY}},{passive:true});document.addEventListener('touchend',e=>{if(!swipeEligible)return;swipeEligible=false;const dx=e.changedTouches[0].screenX-startX,dy=e.changedTouches[0].screenY-startY;if(Math.abs(dx)>65&&Math.abs(dx)>Math.abs(dy)*1.25)shift(dx<0?1:-1)},{passive:true});document.addEventListener('keydown',e=>{if(e.key==='Escape'){closePanel();$('menu').style.display='none';$('searchbar').style.display='none'}});
 renderGames();
