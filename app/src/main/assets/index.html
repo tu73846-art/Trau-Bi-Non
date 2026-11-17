@@ -24,17 +24,22 @@ function safeLoad(key,fallback){try{const value=JSON.parse(localStorage.getItem(
 function saveLocal(key,value){try{localStorage.setItem(key,typeof value==='string'?value:JSON.stringify(value));return true}catch(e){$('hint').textContent='Bộ nhớ ứng dụng đã đầy hoặc không thể ghi dữ liệu. Hãy giải phóng dung lượng rồi thử lại.';return false}}
 let games=safeLoad('games',[]),index=0,cheats=safeLoad('cheats',{});
 if(!Array.isArray(games))games=[];
-games=games.filter(g=>g&&typeof g.name==='string'&&typeof g.uri==='string'&&g.uri.trim().length>0);
+const seenGameUris=new Set();
+games=games.filter(g=>{
+ if(!g||typeof g.name!=='string'||typeof g.uri!=='string'||!g.uri.trim())return false;
+ const uri=g.uri.trim();if(seenGameUris.has(uri))return false;seenGameUris.add(uri);
+ g.name=g.name.trim().slice(0,180);g.uri=uri;return !!g.name;
+});
 if(!cheats||typeof cheats!=='object'||Array.isArray(cheats))cheats={};
 Object.keys(cheats).forEach(k=>{
  if(!Array.isArray(cheats[k])){delete cheats[k];return}
  cheats[k]=cheats[k].map((entry,i)=>normalizeCheatEntry(entry,i)).filter(entry=>entry&&validCheatCode(entry.code));
 });
-function persist(){saveLocal('games',games)}
+function persist(){return saveLocal('games',games)}
 function toggleMenu(){ $('menu').style.display=$('menu').style.display==='block'?'none':'block'}
 function toggleSearch(){ $('searchbar').style.display=$('searchbar').style.display==='block'?'none':'block';if($('searchbar').style.display==='block')$('searchInput').focus();else{$('searchInput').value='';renderGames()}}
 function pickRom(){ $('menu').style.display='none';if(window.AndroidBridge)AndroidBridge.pickRom();else alert('Chọn ROM cần chạy trên bản Android.')}
-function addGameFromAndroid(name,uri){let found=games.findIndex(g=>g.uri===uri);if(found<0){games.push({name:name,uri:uri});index=games.length-1}else index=found;persist();renderGames();$('hint').textContent='Đã thêm: '+name+' · Nhấn CHẠY GAME'}
+function addGameFromAndroid(name,uri){name=String(name||'').trim().slice(0,180);uri=String(uri||'').trim();if(!name||!uri){$('hint').textContent='Không thể thêm ROM: tên hoặc đường dẫn không hợp lệ.';return}let found=games.findIndex(g=>g.uri===uri);if(found>=0){index=found;$('hint').textContent='ROM này đã có trong thư viện.';renderGames();return}games.push({name,uri});index=games.length-1;if(!persist()){games.pop();index=Math.max(0,Math.min(index,games.length-1));renderGames();return}renderGames();$('hint').textContent='Đã thêm: '+name+' · Nhấn CHẠY GAME'}
 function renderGames(){let q=$('searchInput')?.value?.toLowerCase()||'';let filtered=games.filter(g=>g.name.toLowerCase().includes(q));let g=games[index];$('current').innerHTML=g?escapeHtml(g.name)+'<small>'+ (index+1)+' / '+games.length+' GAME</small>':'CHƯA CÓ GAME<small>Thêm ROM để bắt đầu</small>';let p=games[(index-1+games.length)%games.length],n=games[(index+1)%games.length];$('prev').textContent=p?p.name:'TRƯỚC';$('next').textContent=n?n.name:'TIẾP';let list=$('gameList');if(list)list.innerHTML=filtered.map(x=>'<div class="gameRow"><span>'+escapeHtml(x.name)+'</span><button onclick="selectGameByUri(\\''+encodeURIComponent(x.uri)+'\\')">CHỌN</button><button class="red" onclick="removeGameByUri(\\''+encodeURIComponent(x.uri)+'\\')">XÓA</button></div>').join('')||'<p class="muted">Chưa có game phù hợp.</p>';let results=$('searchResults');if(results)results.innerHTML=q?filtered.map(x=>'<button onclick="selectGameByUri(\\''+encodeURIComponent(x.uri)+'\\')">'+escapeHtml(x.name)+'</button>').join('')||'<p class="muted">Không tìm thấy game phù hợp.</p>':''}
 function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function selectGameByUri(u){let uri=decodeURIComponent(u);index=games.findIndex(g=>g.uri===uri);closePanel();if($('searchbar').style.display==='block')toggleSearch();renderGames();$('hint').textContent='Đã chọn: '+(games[index]?.name||'game')}
@@ -43,11 +48,13 @@ function removeGameByUri(u){
  if(at<0)return;
  let name=games[at].name;
  if(!confirm('Xóa '+name+' khỏi thư viện Trâu Bi Non? Tệp ROM gốc và save-state trong ứng dụng không bị xóa.'))return;
+ const oldGames=games.slice(),oldCheats=JSON.parse(JSON.stringify(cheats));
  games.splice(at,1);
  const key=Object.keys(cheats).find(k=>k.trim().toLowerCase()===name.trim().toLowerCase());
- if(key){delete cheats[key];saveLocal('cheats',cheats)}
+ if(key)delete cheats[key];
  if(index>=games.length)index=Math.max(0,games.length-1);
- persist();renderGames();renderCheatList();
+ if(!saveLocal('games',games)||(key&&!saveLocal('cheats',cheats))){games=oldGames;cheats=oldCheats;index=Math.min(at,games.length-1);renderGames();renderCheatList();return}
+ renderGames();renderCheatList();
  $('hint').textContent='Đã xóa '+name+' khỏi thư viện.';
 }
 function shift(d){if(!games.length)return;index=(index+d+games.length)%games.length;renderGames()}
