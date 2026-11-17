@@ -36,34 +36,71 @@ if(which==='network'){let active=games[index]?.name||'';b.innerHTML='<h3>⇄ CH�
 if(which==='cheats'){let active=games[index]?.name||'';b.innerHTML='<h3>⚡ AUTOCHEAT · '+(active?escapeHtml(active):'KHO MÃ')+'</h3><p class="muted">Game đang chọn: '+(active?escapeHtml(active):'Chưa chọn game')+'</p><input id="cheatGame" placeholder="Tên game" value="'+escapeHtml(active)+'"><input id="cheatName" placeholder="Tên cheat"><input id="cheatCode" placeholder="Mã cheat"><button onclick="addCheat()">＋ LƯU CHEAT</button><button onclick="document.getElementById('cheatImport').click()">NHẬP TỆP .TXT / .CHT</button><button onclick="exportCheats()">XUẤT JSON</button><button onclick="copyAllCurrentCheats()">SAO CHÉP MÃ GAME NÀY</button><button onclick="applyCheatsAndLaunch()">LƯU CHEAT VÀ CHẠY mGBA</button><button onclick="openMyBoyWithCheats()">MỞ MY BOY!</button><div id="cheatList"></div><p class="muted">Mã sẽ được ghi thành tệp .cheats riêng theo tên ROM để lõi mGBA tự nạp khi mở game. Mã không tương thích có thể không hoạt động; hãy thử từng mã và sao lưu save.</p>'}
 renderGames();renderCheatList();updateSlots()}
 function closePanel(){$('panel').style.display='none'}
-function addCheat(){let g=$('cheatGame').value.trim()||games[index]?.name||'Game chưa đặt tên',n=$('cheatName').value.trim()||'Cheat',code=$('cheatCode').value.trim();if(!code){$('cheatCode').focus();return}cheats[g]=cheats[g]||[];cheats[g].push({name:n,code:code,enabled:true});localStorage.setItem('cheats',JSON.stringify(cheats));$('cheatCode').value='';renderCheatList()}
+function normalizeCheatEntry(x,i){
+ if(typeof x==='string')return {name:'Cheat '+(i+1),code:x,enabled:true};
+ if(!x||typeof x!=='object')return null;
+ const code=String(x.code||x.codes||x.value||'').replace(/\\r/g,'').trim();
+ if(!code)return null;
+ return {name:String(x.name||x.title||('Cheat '+(i+1))).slice(0,100),code,enabled:x.enabled!==false};
+}
+function validCheatCode(code){
+ const lines=String(code||'').split(/\\r?\\n/).map(x=>x.trim()).filter(Boolean);
+ return lines.length>0&&lines.every(x=>/^(?:[0-9a-f]{8})\\s+(?:[0-9a-f]{4,8})$/i.test(x));
+}
+function addCheat(){
+ let g=$('cheatGame').value.trim()||games[index]?.name||'Game chưa đặt tên';
+ let n=$('cheatName').value.trim()||'Cheat',code=$('cheatCode').value.trim();
+ if(!validCheatCode(code)){$('hint').textContent='Mã chưa đúng định dạng: mỗi dòng cần 8 ký tự hex, dấu cách, rồi 4–8 ký tự hex.';$('cheatCode').focus();return}
+ cheats[g]=cheats[g]||[];
+ if(cheats[g].some(x=>String(x.code).trim().toLowerCase()===code.toLowerCase())){$('hint').textContent='Mã này đã có trong kho của game.';return}
+ cheats[g].push({name:n,code,enabled:true});
+ localStorage.setItem('cheats',JSON.stringify(cheats));$('cheatCode').value='';$('hint').textContent='Đã lưu mã cho '+g;renderCheatList();
+}
 function importCheatFile(file){
  if(!file)return;
  const reader=new FileReader();
  reader.onload=()=>{
-  const raw=String(reader.result||'');
-  const game=$('cheatGame')?.value.trim()||games[index]?.name||'Game chưa đặt tên';
-  let imported=[];
-  if(file.name.toLowerCase().endsWith('.json')){
-   try{const obj=JSON.parse(raw);Object.keys(obj).forEach(k=>{cheats[k]=[...(cheats[k]||[]),...(Array.isArray(obj[k])?obj[k]:[])]});}
-   catch(e){$('hint').textContent='Tệp JSON không hợp lệ';return;}
+  const raw=String(reader.result||''),game=$('cheatGame')?.value.trim()||games[index]?.name||'Game chưa đặt tên';
+  let imported=[],jsonMode=/\\.json$/i.test(file.name);
+  if(jsonMode){
+   try{
+    const obj=JSON.parse(raw);
+    if(!obj||typeof obj!=='object')throw new Error('JSON không phải đối tượng');
+    Object.keys(obj).forEach(k=>{
+     const list=Array.isArray(obj[k])?obj[k]:[obj[k]];
+     const normalized=list.map(normalizeCheatEntry).filter(x=>x&&validCheatCode(x.code));
+     if(normalized.length)cheats[k]=[...(cheats[k]||[]),...normalized];
+    });
+   }catch(e){$('hint').textContent='Tệp JSON không hợp lệ hoặc sai cấu trúc.';return}
   }else{
-   let name='',type='Chưa rõ',codes=[];
-   const flush=()=>{if(name&&codes.length)imported.push({name,code:codes.join('\n'),type,enabled:true});};
-   for(const line of raw.split(/\r?\n/)){
-    const h=line.trim().match(/^\d+[.)]\s*(.+?)\s*[-–]\s*(GameShark(?:\s*\/\s*Action Replay)?|Action Replay|CodeBreaker)\s*$/i);
-    if(h){flush();name=h[1].trim();type=h[2].trim();codes=[];continue;}
-    if(/^[0-9A-Fa-f]{8}\s+[0-9A-Fa-f]{4,8}$/.test(line.trim())){if(!name){name='Mã nhập từ tệp';type='Chưa rõ';}codes.push(line.trim());}
+   let name='',codes=[];
+   const flush=()=>{if(codes.length)imported.push({name:name||('Cheat '+(imported.length+1)),code:codes.join('\\n'),enabled:true});codes=[]};
+   for(const line of raw.split(/\\r?\\n/)){
+    const t=line.trim();
+    if(!t)continue;
+    const heading=t.match(/^(?:\\[([^\\]]+)\\]|#\\s*(.+)|(?:Name|Cheat)\\s*[:=]\\s*(.+))$/i);
+    if(heading){flush();name=(heading[1]||heading[2]||heading[3]||'').trim();continue}
+    const numbered=t.match(/^\\d+[.)]\\s*(.+?)\\s*[-–]\\s*(?:GameShark(?:\\s*\\/\\s*Action Replay)?|Action Replay|CodeBreaker)\\s*$/i);
+    if(numbered){flush();name=numbered[1].trim();continue}
+    if(/^[0-9a-f]{8}\\s+[0-9a-f]{4,8}$/i.test(t)){codes.push(t);continue}
+    if(/^(?:;|\\*|\\/\\/)/.test(t))continue;
    }
    flush();
-   if(!imported.length){$('hint').textContent='Không đọc được mã. Hãy dùng tệp TXT có tiêu đề cheat và các dòng mã hex.';return;}
+   imported=imported.map((x,i)=>normalizeCheatEntry(x,i)).filter(x=>x&&validCheatCode(x.code));
+   if(!imported.length){$('hint').textContent='Không tìm thấy mã hợp lệ trong tệp. Mỗi dòng mã cần dạng 8 ký tự hex + dấu cách + 4–8 ký tự hex.';return}
    cheats[game]=[...(cheats[game]||[]),...imported];
   }
+  Object.keys(cheats).forEach(k=>{
+   const seen=new Set();
+   cheats[k]=(Array.isArray(cheats[k])?cheats[k]:[]).map(normalizeCheatEntry).filter(x=>{
+    if(!x||!validCheatCode(x.code))return false;
+    const key=x.code.toLowerCase();if(seen.has(key))return false;seen.add(key);return true;
+   });
+  });
   localStorage.setItem('cheats',JSON.stringify(cheats));
-  $('hint').textContent='Đã nhập mã vào kho AutoCheat';
-  $('cheatImport').value='';
-  renderCheatList();
+  $('hint').textContent='Đã nhập và kiểm tra mã AutoCheat.';$('cheatImport').value='';renderCheatList();
  };
+ reader.onerror=()=>{$('hint').textContent='Không đọc được tệp cheat.'};
  reader.readAsText(file);
 }
 function currentCheatEntries(){let name=games[index]?.name||$('cheatGame')?.value||'';let key=Object.keys(cheats).find(k=>k.trim().toLowerCase()===name.trim().toLowerCase());return key?cheats[key]:[]}
