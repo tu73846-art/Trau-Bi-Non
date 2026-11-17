@@ -16,9 +16,11 @@ jobs:
         run: |
           git clone --depth 1 https://github.com/Gitsnup/mgba-android.git mgba-src
           git clone --depth 1 --branch release-2.30.9 https://github.com/libsdl-org/SDL.git SDL2
-      - uses: gradle/actions/setup-gradle@v4
-        with:
-          gradle-version: '8.9'
+      - name: Install Gradle 8.9
+        run: |
+          curl -fsSL https://services.gradle.org/distributions/gradle-8.9-bin.zip -o /tmp/gradle.zip
+          sudo unzip -q /tmp/gradle.zip -d /opt
+          echo "/opt/gradle-8.9/bin" >> "$GITHUB_PATH"
       - name: Install Android build packages
         shell: bash
         run: |
