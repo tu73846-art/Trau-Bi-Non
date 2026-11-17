@@ -76,7 +76,7 @@ function addCheat(){
  cheats[g]=cheats[g]||[];
  if(cheats[g].some(x=>String(x.code).trim().toLowerCase()===code.toLowerCase())){$('hint').textContent='Mã này đã có trong kho của game.';return}
  cheats[g].push({name:n,code,enabled:true});
- localStorage.setItem('cheats',JSON.stringify(cheats));$('cheatCode').value='';$('hint').textContent='Đã lưu mã cho '+g;renderCheatList();
+ saveLocal('cheats',cheats);$('cheatCode').value='';$('hint').textContent='Đã lưu mã cho '+g;renderCheatList();
 }
 function importCheatFile(file){
  if(!file)return;
@@ -119,7 +119,7 @@ function importCheatFile(file){
     const key=x.code.toLowerCase();if(seen.has(key))return false;seen.add(key);return true;
    });
   });
-  localStorage.setItem('cheats',JSON.stringify(cheats));
+  saveLocal('cheats',cheats);
   $('hint').textContent='Đã nhập và kiểm tra mã AutoCheat.';$('cheatImport').value='';renderCheatList();
  };
  reader.onerror=()=>{$('hint').textContent='Không đọc được tệp cheat.'};
@@ -127,7 +127,7 @@ function importCheatFile(file){
 }
 function currentCheatEntries(){let name=games[index]?.name||$('cheatGame')?.value||'';let key=Object.keys(cheats).find(k=>k.trim().toLowerCase()===name.trim().toLowerCase());return key?cheats[key]:[]}
 function renderCheatList(){let e=$('cheatList');if(!e)return;let entries=currentCheatEntries();e.innerHTML=entries.map((x,i)=>'<div class="gameRow"><span><b>'+escapeHtml(x.name)+'</b> · '+(x.enabled===false?'TẮT':'BẬT')+'<br>'+escapeHtml(x.code)+'</span><button onclick="toggleCheat('+i+')">'+(x.enabled===false?'BẬT':'TẮT')+'</button><button onclick="copyOneCheat('+i+')">CHÉP</button></div>').join('')||'<p class="muted">Chưa có mã cho game này. Hãy thêm mã ở trên.</p>'}
-function toggleCheat(i){let game=games[index]?.name||$('cheatGame')?.value||'';let key=Object.keys(cheats).find(k=>k.trim().toLowerCase()===game.trim().toLowerCase());if(!key||!cheats[key][i])return;cheats[key][i].enabled=cheats[key][i].enabled===false;localStorage.setItem('cheats',JSON.stringify(cheats));renderCheatList()}
+function toggleCheat(i){let game=games[index]?.name||$('cheatGame')?.value||'';let key=Object.keys(cheats).find(k=>k.trim().toLowerCase()===game.trim().toLowerCase());if(!key||!cheats[key][i])return;cheats[key][i].enabled=cheats[key][i].enabled===false;saveLocal('cheats',cheats);renderCheatList()}
 function applyCheatsAndLaunch(){let g=games[index];if(!g){$('hint').textContent='Hãy thêm và chọn ROM trước';return}let entries=currentCheatEntries();if(!entries.length){$('hint').textContent='Chưa có mã cheat cho game này';return}let body=entries.map(x=>{let lines=String(x.code||'').split(/\r?\n/).map(v=>v.trim()).filter(Boolean);if(!lines.length)return '';let name=String(x.name||'Cheat').replace(/[\r\n]/g,' ');return (x.enabled===false?'!disabled\n':'')+'# '+name+'\n'+lines.join('\n')}).filter(Boolean).join('\n');if(!window.AndroidBridge||!AndroidBridge.saveCheats){$('hint').textContent='Cần bản Android mới để áp dụng AutoCheat vào mGBA';return}AndroidBridge.saveCheats(g.name,body);$('hint').textContent='Đã ghi kho cheat cho '+g.name+' · đang mở game';closePanel();launchCurrent()}
 function copyCheatText(value){if(window.AndroidBridge&&AndroidBridge.copyText){AndroidBridge.copyText(value);$('hint').textContent='Đã sao chép mã Cheat'}else if(navigator.clipboard?.writeText){navigator.clipboard.writeText(value);$('hint').textContent='Đã sao chép mã Cheat'}else{$('hint').textContent='Thiết bị chưa hỗ trợ sao chép tự động'}}
 function copyOneCheat(i){let x=currentCheatEntries()[i];if(x)copyCheatText(x.name+'\n'+x.code)}
