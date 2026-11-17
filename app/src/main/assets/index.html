@@ -73,7 +73,7 @@ function applyCheatsAndLaunch(){let g=games[index];if(!g){$('hint').textContent=
 function copyCheatText(value){if(window.AndroidBridge&&AndroidBridge.copyText){AndroidBridge.copyText(value);$('hint').textContent='Đã sao chép mã Cheat'}else if(navigator.clipboard?.writeText){navigator.clipboard.writeText(value);$('hint').textContent='Đã sao chép mã Cheat'}else{$('hint').textContent='Thiết bị chưa hỗ trợ sao chép tự động'}}
 function copyOneCheat(i){let x=currentCheatEntries()[i];if(x)copyCheatText(x.name+'\n'+x.code)}
 function copyAllCurrentCheats(){let xs=currentCheatEntries();if(xs.length)copyCheatText(xs.map(x=>x.name+'\n'+x.code).join('\n\n'));else $('hint').textContent='Chưa có mã Cheat cho game đang chọn'}
-function openMyBoyWithCheats(){let xs=currentCheatEntries();if(!xs.length){$('hint').textContent='Chưa có mã cho game đang chọn';return}copyCheatText(xs.map(x=>x.name+'\n'+x.code).join('\n\n'));openMyBoy()}
+function openMyBoyWithCheats(){let xs=currentCheatEntries();if(!xs.length){$('hint').textContent='Chưa có mã cho game đang chọn';return}copyCheatText(xs.map(x=>x.name+'\n'+x.code).join('\n\n'));launchMyBoyCurrent()}
 function exportCheats(){let blob=new Blob([JSON.stringify(cheats,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='trau-bi-non-cheats.json';a.click();URL.revokeObjectURL(a.href)}
 function saveSlot(){openPanel('saves')}
 function updateSlots(){}
