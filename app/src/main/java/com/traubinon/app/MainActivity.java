@@ -44,7 +44,10 @@ public class MainActivity extends Activity {
     @JavascriptInterface public void openMyBoy() {
       runOnUiThread(() -> {
         Intent i = getPackageManager().getLaunchIntentForPackage(MYBOY_PACKAGE);
-        if (i != null) startActivity(i);
+        if (i != null) {
+          i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+          startActivity(i);
+        }
         else Toast.makeText(MainActivity.this, "Chưa tìm thấy My Boy! Hãy cài My Boy trước.", Toast.LENGTH_LONG).show();
       });
     }
@@ -67,8 +70,11 @@ public class MainActivity extends Activity {
 
   private void launchRom(Uri uri) {
     Intent i = new Intent(Intent.ACTION_VIEW);
-    i.setDataAndType(uri, "*/*");
+    String mime = getContentResolver().getType(uri);
+    if (mime == null || mime.trim().isEmpty() || "*/*".equals(mime)) mime = "application/octet-stream";
+    i.setDataAndType(uri, mime);
     i.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+    i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
     i.setPackage(MYBOY_PACKAGE);
     try {
       startActivity(i);
