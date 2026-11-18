@@ -12,6 +12,9 @@ import android.os.Handler;
 import android.os.Looper;
 import android.view.Gravity;
 import android.view.KeyEvent;
+import android.view.InputDevice;
+import android.view.MotionEvent;
+import android.view.View;
 import android.view.PixelCopy;
 import android.view.SurfaceView;
 import android.widget.TextView;
@@ -76,8 +79,83 @@ public final class EmulatorActivity extends SDLActivity {
         catch (Exception ignored) { romLibrary = new JSONArray(); }
         romIndex = getIntent().getIntExtra("rom_index", 0);
         super.onCreate(state);
+        setupTouchControls();
         setupTranslationOverlay();
         translationHandler.postDelayed(translationLoop, 1600);
+    }
+
+    /**
+     * On-screen GBA controls. The old WebView buttons lived only in the launcher
+     * and never reached SDL while a ROM was running. These native overlay buttons
+     * send matching SDL key down/up events for the full duration of each touch.
+     */
+    private void setupTouchControls() {
+        if (mLayout == null) return;
+
+        RelativeLayout pad = new RelativeLayout(this);
+        RelativeLayout.LayoutParams padParams = new RelativeLayout.LayoutParams(dp(174), dp(142));
+        padParams.addRule(RelativeLayout.ALIGN_PARENT_LEFT);
+        padParams.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
+        padParams.setMargins(dp(10), 0, 0, dp(14));
+        mLayout.addView(pad, padParams);
+
+        addTouchButton(pad, "↑", KeyEvent.KEYCODE_DPAD_UP, 54, 46, 60, 0);
+        addTouchButton(pad, "←", KeyEvent.KEYCODE_DPAD_LEFT, 54, 46, 4, 48);
+        addTouchButton(pad, "→", KeyEvent.KEYCODE_DPAD_RIGHT, 54, 46, 116, 48);
+        addTouchButton(pad, "↓", KeyEvent.KEYCODE_DPAD_DOWN, 54, 46, 60, 96);
+
+        RelativeLayout actions = new RelativeLayout(this);
+        RelativeLayout.LayoutParams actionParams = new RelativeLayout.LayoutParams(dp(174), dp(142));
+        actionParams.addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
+        actionParams.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
+        actionParams.setMargins(0, 0, dp(10), dp(14));
+        mLayout.addView(actions, actionParams);
+
+        addTouchButton(actions, "B", KeyEvent.KEYCODE_BUTTON_B, 58, 54, 8, 70);
+        addTouchButton(actions, "A", KeyEvent.KEYCODE_BUTTON_A, 58, 54, 108, 30);
+        addTouchButton(actions, "L", KeyEvent.KEYCODE_BUTTON_L1, 48, 38, 4, 0);
+        addTouchButton(actions, "R", KeyEvent.KEYCODE_BUTTON_R1, 48, 38, 122, 0);
+        addTouchButton(actions, "SELECT", KeyEvent.KEYCODE_BUTTON_SELECT, 62, 32, 0, 108);
+        addTouchButton(actions, "START", KeyEvent.KEYCODE_BUTTON_START, 62, 32, 108, 108);
+    }
+
+    private int dp(float value) {
+        return Math.round(value * getResources().getDisplayMetrics().density);
+    }
+
+    private void addTouchButton(RelativeLayout parent, String label, int keyCode,
+                                int width, int height, int left, int top) {
+        TextView button = new TextView(this);
+        button.setText(label);
+        button.setTextColor(Color.WHITE);
+        button.setTextSize(label.length() > 1 ? 10 : 17);
+        button.setGravity(Gravity.CENTER);
+        button.setPadding(dp(3), dp(3), dp(3), dp(3));
+        GradientDrawable bg = new GradientDrawable();
+        bg.setColor(0xB8203548);
+        bg.setCornerRadius(dp(12));
+        bg.setStroke(dp(2), 0xCC19DCFF);
+        button.setBackground(bg);
+        RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(dp(width), dp(height));
+        params.leftMargin = dp(left);
+        params.topMargin = dp(top);
+        parent.addView(button, params);
+        button.setOnTouchListener((view, event) -> {
+            int action = event.getActionMasked();
+            if (action == MotionEvent.ACTION_DOWN || action == MotionEvent.ACTION_UP ||
+                action == MotionEvent.ACTION_CANCEL) {
+                boolean down = action == MotionEvent.ACTION_DOWN;
+                KeyEvent keyEvent = new KeyEvent(
+                    down ? KeyEvent.ACTION_DOWN : KeyEvent.ACTION_UP,
+                    keyCode
+                );
+                keyEvent.setSource(InputDevice.SOURCE_KEYBOARD);
+                SDLActivity.handleKeyEvent(mSurface, keyCode, keyEvent, null);
+                view.setAlpha(down ? 0.62f : 1.0f);
+                return true;
+            }
+            return true;
+        });
     }
 
     private void setupTranslationOverlay() {
