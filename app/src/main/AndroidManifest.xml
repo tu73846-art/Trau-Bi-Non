@@ -2,7 +2,6 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-feature android:glEsVersion="0x00020000" android:required="false" />
     <uses-feature android:name="android.hardware.usb.host" android:required="false" />
-    <queries><package android:name="com.fastemulator.gba" /></queries>
     <application android:icon="@drawable/ic_launcher" android:roundIcon="@drawable/ic_launcher" android:allowBackup="true" android:label="Trâu Bi Non" android:theme="@android:style/Theme.Material.Light.NoActionBar" android:hardwareAccelerated="true">
         <activity android:name="org.libsdl.app.EmulatorActivity"
             android:exported="false" android:screenOrientation="landscape"
