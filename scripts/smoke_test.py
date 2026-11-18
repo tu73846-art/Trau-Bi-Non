@@ -68,6 +68,27 @@ class SmokeTests(unittest.TestCase):
         self.assertIn("openPanel('controller')", self.html)
         self.assertIn('refreshControllerList()', self.html)
         self.assertIn('android.hardware.usb.host', self.manifest)
+    def test_physical_buttons_switch_games(self):
+        emulator = (ROOT / "app/src/main/java/org/libsdl/app/EmulatorActivity.java").read_text()
+        self.assertIn("KEYCODE_VOLUME_UP", emulator)
+        self.assertIn("KEYCODE_VOLUME_DOWN", emulator)
+        self.assertIn("KEYCODE_BUTTON_R1", emulator)
+        self.assertIn("KEYCODE_BUTTON_L1", emulator)
+        self.assertIn("rom_library_json", self.java)
+        self.assertIn("setGameLibrary(JSON.stringify(games),index)", self.html)
+
+    def test_automatic_game_text_translation_overlay(self):
+        emulator = (ROOT / "app/src/main/java/org/libsdl/app/EmulatorActivity.java").read_text()
+        gradle = (ROOT / "app/build.gradle").read_text()
+        self.assertIn("PixelCopy.request", emulator)
+        self.assertIn("LanguageIdentification", emulator)
+        self.assertIn("Translation.getClient", emulator)
+        self.assertIn("TranslateLanguage.VIETNAMESE", emulator)
+        self.assertIn("DỊCH: BẬT", emulator)
+        self.assertIn("com.google.mlkit:translate", gradle)
+        self.assertIn("text-recognition-japanese", gradle)
+        self.assertIn("text-recognition-chinese", gradle)
+
     def test_inline_javascript_parses(self):
         node = shutil.which("node")
         if not node:
