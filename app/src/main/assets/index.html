@@ -54,6 +54,18 @@ body{min-height:0;min-height:100dvh}
 @media(max-width:380px){#aiToggle{font-size:9px;padding:3px 6px;gap:4px}}
 
 #aiChat{display:flex;flex-direction:column;gap:7px;min-height:190px}#aiMessages{height:min(42vh,260px);min-height:130px;overflow:auto;background:#020a10;border:1px solid #17485a;border-radius:9px;padding:8px}.aiMsg{max-width:92%;padding:7px 9px;margin:5px 0;border-radius:9px;font-size:12px;line-height:1.4;white-space:pre-wrap;overflow-wrap:anywhere}.aiMsg.bot{background:#102631;border:1px solid #17677c;margin-right:auto}.aiMsg.user{background:#06445a;border:1px solid #19dcff;margin-left:auto}.aiComposer{display:flex;gap:5px}.aiComposer input{flex:1;min-width:0;margin:0!important}#aiChat button{margin:0}
+
+/* Touch navigation: animate game changes and allow vertical finger scrolling in menus/panels. */
+#menu,#panel,#gameList,#searchResults,#aiMessages,#onlineCheatResults{touch-action:pan-y;-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain;scrollbar-width:thin}
+#menu{max-height:78dvh;overflow-y:auto;overflow-x:hidden}
+#panel{overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch}
+#panelBody{min-height:0}
+#gameList,#searchResults,#aiMessages,#onlineCheatResults{overflow-y:auto;overflow-x:hidden;max-height:42dvh}
+main.game-change-next{animation:gameSlideNext .24s ease-out}
+main.game-change-prev{animation:gameSlidePrev .24s ease-out}
+@keyframes gameSlideNext{from{opacity:.45;transform:translateX(-22px)}to{opacity:1;transform:translateX(0)}}
+@keyframes gameSlidePrev{from{opacity:.45;transform:translateX(22px)}to{opacity:1;transform:translateX(0)}}
+@media(prefers-reduced-motion:reduce){main.game-change-next,main.game-change-prev{animation:none}}
 </style></head><body>
 <header><span>🐃 TRÂU BI NON</span><span><button id="aiToggle" type="button" aria-pressed="false" onclick="toggleAIAssistant()"><i class="ai-dot"></i><span id="aiToggleText">AI · TẮT</span></button> <button onclick="toggleSearch()">⌕ TÌM</button> <button onclick="toggleMenu()">⋮</button></span></header>
 <div id="searchbar"><input id="searchInput" placeholder="Nhập tên game để tìm..." oninput="renderGames()"><div id="searchResults"></div><button onclick="toggleSearch()">ĐÓNG</button></div>
@@ -160,7 +172,7 @@ function removeGameByUri(u){
  renderGames();renderCheatList();
  $('hint').textContent='Đã xóa '+name+' khỏi thư viện.';
 }
-function shift(d){if(!games.length)return;index=(index+d+games.length)%games.length;renderGames()}
+function shift(d){if(!games.length)return;index=(index+d+games.length)%games.length;renderGames();const stage=$('main');if(stage){stage.classList.remove('game-change-next','game-change-prev');void stage.offsetWidth;stage.classList.add(d>0?'game-change-next':'game-change-prev');stage.addEventListener('animationend',()=>stage.classList.remove('game-change-next','game-change-prev'),{once:true});}}
 function launchCurrent(){let g=games[index];if(!g){pickRom();return}let p=safeLoad('graphics',{});let quality=p.quality||'Tiêu chuẩn',fps=p.fps||'60 FPS';if(window.AndroidBridge)AndroidBridge.openRom(g.uri,quality,fps);else alert('Chỉ chạy ROM trong ứng dụng Android.')}
 function openMyBoy(){ $('menu').style.display='none';if(window.AndroidBridge)AndroidBridge.openMyBoy();else alert('Chỉ có trên Android.')}
 function launchMyBoyCurrent(){let g=games[index];if(!g){$('hint').textContent='Hãy thêm và chọn ROM trước';return}if(!window.AndroidBridge||!AndroidBridge.openRomInMyBoy){$('hint').textContent='Chỉ mở My Boy! từ ứng dụng Android';return}if(AndroidBridge.isMyBoyInstalled&&!AndroidBridge.isMyBoyInstalled()){$('hint').textContent='Chưa cài My Boy! · hãy cài My Boy rồi thử lại';return}AndroidBridge.openRomInMyBoy(g.uri);$('hint').textContent='Đang chuyển '+g.name+' sang My Boy!';}
