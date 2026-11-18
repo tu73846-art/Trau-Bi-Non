@@ -111,7 +111,7 @@ body{padding:0;gap:0;background-image:radial-gradient(ellipse at 68% 12%,#a5e6ff
 @media(max-width:520px){.heroHead{height:46px;min-height:46px}.brandMark b{font-size:16px}.brandIcon{font-size:26px}.brandMark small{font-size:11px}.homeStage{grid-template-columns:minmax(72px,.72fr) minmax(155px,1.5fr) minmax(82px,.8fr);gap:4px;padding:6px 4px}.sceneText{padding:5px 4px}.homeGameRow{min-height:36px;padding:4px;font-size:10px}.homeGameRow .ball{font-size:17px}.chooserTitle{font-size:10px}.homeActions{gap:4px}.homeActions button{min-height:37px;border-radius:10px;font-size:15px}.homeActions button span{font-size:11px}.bottomLegend{font-size:9px}}
 @media(max-height:420px){.heroHead{height:38px;min-height:38px}.homeStage{padding:4px;gap:5px}.homeActions button{min-height:29px}.homeGameRow{min-height:30px}.sceneText{font-size:9px}.mascot{font-size:48px}.bottomLegend{height:27px;min-height:27px}#hint{height:18px;min-height:18px;max-height:18px}}
 @media(max-width:360px){.sceneDecor{display:none}.homeStage{grid-template-columns:minmax(0,1fr) minmax(90px,.65fr)}.gameChooser{grid-column:1}.homeActions{grid-column:2;grid-row:1}.brandMark b{font-size:14px}}
-</style></head><body>
+\n.hw-focus{outline:3px solid #fff52d!important;box-shadow:0 0 0 3px #063a9c,0 0 14px #fff52d!important;filter:brightness(1.2)}\n</style></head><body>
 <header class="heroHead"><div class="brandMark"><span class="brandIcon">🎮</span><span><b>Game Pikachu</b><small>J36 Ultra</small></span></div><div class="headTools"><span class="battery">▰▰▰ 100%</span><button onclick="openPanel('controls')">⚙ Cài đặt</button></div></header>
 <div id="menu"><button onclick="pickRom()">＋ Thêm game / ROM</button><button onclick="pickRomFolder()">▣ Quét thư mục game</button><button onclick="openWallpaperPanel()">🖼 Hình nền</button><button onclick="openPanel('library')">▤ Thư viện game</button><button onclick="openPanel('controls')">⌖ Cài nút điều khiển</button><button onclick="openPanel('controller')">🎮 Tay cầm Bluetooth / OTG</button><button onclick="openPanel('graphics')">◈ Đồ họa & FPS</button><button onclick="openPanel('saves')">▣ Ô lưu game</button><button onclick="openPanel('cheats')">⚡ AutoCheat · Kho mã</button><button onclick="openPanel('network')">⇄ Chơi Online / Offline</button><button onclick="openPanel('ai')">🤖 Trợ lí AI</button><button onclick="openBackupPanel()">▣ Sao lưu / Khôi phục</button><button onclick="openPanel('emulator')">Chọn giả lập mGBA / My Boy!</button></div>
 <div id="searchbar">
@@ -566,13 +566,53 @@ function saveSlot(){openPanel('saves')}
 function updateSlots(){}
 function savePrefs(){if(!saveLocal('graphics',{quality:$('quality').value,fps:$('fps').value}))return;$('hint').textContent='Đã lưu bộ lọc đồ họa và FPS · áp dụng khi mở game tiếp theo'}
 function virtualKey(k){handleHardwareKey(k)}
+let hardwareFocusIndex=0;
+function hardwareFocusItems(){
+ const items=[];
+ const chooser=$('gameChooser');
+ if(chooser&&!chooser.classList.contains('collapsed')){
+  document.querySelectorAll('#homeGameRows .homeGameRow').forEach((el)=>{if(el.querySelector('.gameName'))items.push(el)});
+  const add=document.querySelector('#gameChooser .addGameRow');if(add)items.push(add);
+ }
+ document.querySelectorAll('.homeActions button').forEach(el=>items.push(el));
+ return items;
+}
+function paintHardwareFocus(){
+ const items=hardwareFocusItems();
+ document.querySelectorAll('.hw-focus').forEach(el=>el.classList.remove('hw-focus'));
+ if(!items.length){hardwareFocusIndex=0;return}
+ hardwareFocusIndex=Math.max(0,Math.min(hardwareFocusIndex,items.length-1));
+ items[hardwareFocusIndex].classList.add('hw-focus');
+ items[hardwareFocusIndex].scrollIntoView({block:'nearest',inline:'nearest'});
+}
+function moveHardwareFocus(delta){
+ const items=hardwareFocusItems();if(!items.length){hardwareFocusIndex=0;return}
+ hardwareFocusIndex=(hardwareFocusIndex+delta+items.length)%items.length;paintHardwareFocus();
+}
+function activateHardwareFocus(){
+ const items=hardwareFocusItems();if(!items.length){launchCurrent();return}
+ const el=items[Math.max(0,Math.min(hardwareFocusIndex,items.length-1))];
+ el.click();
+}
 function handleHardwareKey(action){
+ if($('panel').style.display==='block'){
+  if(action==='BACK'){closePanel();return}
+  const controls=[...$('panelBody').querySelectorAll('button,input,select')].filter(x=>!x.disabled);
+  if(action==='UP'||action==='PREVIOUS'){if(controls.length)controls[Math.max(0,controls.indexOf(document.activeElement)-1)].focus();return}
+  if(action==='DOWN'||action==='NEXT'){if(controls.length)controls[Math.min(controls.length-1,controls.indexOf(document.activeElement)+1)].focus();return}
+  if(action==='CONFIRM'){document.activeElement?.click?.();return}
+  return;
+ }
+ if($('menu').style.display==='block'||$('searchbar').style.display==='block'){
+  if(action==='BACK'){$('menu').style.display='none';if($('searchbar').style.display==='block')toggleSearch();return}
+  if(action==='CONFIRM'){document.activeElement?.click?.();return}
+ }
+ if(action==='UP'){moveHardwareFocus(-1);return}
+ if(action==='DOWN'){moveHardwareFocus(1);return}
  if(action==='LEFT'){shift(-1);return}
  if(action==='RIGHT'){shift(1);return}
- if(action==='UP'){toggleMenu();return}
- if(action==='DOWN'){toggleSearch();return}
- if(action==='CONFIRM'){if($('panel').style.display==='block')return;launchCurrent();return}
- if(action==='BACK'){if($('panel').style.display==='block'){closePanel();return}if($('menu').style.display==='block'){$('menu').style.display='none';return}if($('searchbar').style.display==='block'){toggleSearch();return}return}
+ if(action==='CONFIRM'){activateHardwareFocus();return}
+ if(action==='BACK'){if(! $('gameChooser').classList.contains('collapsed'))toggleGameChooser();else $('menu').style.display='none';return}
  if(action==='PREVIOUS'){shift(-1);return}
  if(action==='NEXT'){shift(1);return}
  if(action==='MENU'){toggleMenu();return}
