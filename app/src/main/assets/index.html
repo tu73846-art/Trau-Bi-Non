@@ -85,32 +85,32 @@ body{padding:0;gap:0;background-image:radial-gradient(ellipse at 68% 12%,#a5e6ff
 .brandMark{display:flex;align-items:center;gap:8px;font-size:20px;text-shadow:2px 3px #06235d}
 .brandIcon{font-size:32px}.brandMark b{font-size:21px;font-style:italic}.brandMark small{display:block;color:#ffeb28;font-size:14px;font-weight:900;font-style:italic;text-align:center}
 .headTools{display:flex;align-items:center;gap:7px}.battery{font-size:12px;font-weight:bold;background:#073c87;border:1px solid #69e6ff;border-radius:20px;padding:5px 8px}.heroHead button{background:#073d8c;border:1px solid #91eaff;color:white;min-height:31px}
-.homeStage{flex:1;min-height:0;display:grid;grid-template-columns:minmax(110px, .9fr) minmax(210px,1.5fr) minmax(105px,.78fr);gap:8px;padding:10px 9px 7px;align-items:center;position:relative;overflow:hidden;background:linear-gradient(180deg,#168eea44 0%,#0e8cbd33 45%,#14582f66 100%)}
+.homeStage{flex:1;min-height:0;display:grid;grid-template-columns:minmax(78px,.72fr) minmax(150px,1.5fr);grid-template-rows:minmax(0,1fr) auto;gap:7px;padding:8px 8px 6px;align-items:center;position:relative;overflow:hidden;background:linear-gradient(180deg,#168eea44 0%,#0e8cbd33 45%,#14582f66 100%)}
 .homeStage:before{content:"";position:absolute;inset:48% 0 0;background:repeating-linear-gradient(0deg,#248d43 0 7px,#1c7739 7px 12px);opacity:.55;z-index:0}
 .sceneDecor,.gameChooser,.homeActions{position:relative;z-index:1}
-.sceneDecor{height:100%;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:8px}
+.sceneDecor{grid-column:1;grid-row:1;height:100%;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:8px}
 .pixelSun{position:absolute;width:62px;height:62px;border-radius:50%;background:#ffef8b;top:8%;right:12%;box-shadow:0 0 24px #fff4a7}
 .mascot{font-size:clamp(54px,13vw,112px);filter:drop-shadow(2px 5px 2px #18345c88);position:relative;z-index:1}.mascot span{font-size:32px;position:absolute;right:-10px;bottom:7px}
 .sceneText{background:#06285deF;border:1px solid #6adfff;border-radius:10px;padding:7px 9px;font-size:clamp(10px,2.4vw,15px);font-weight:bold;text-align:center;box-shadow:0 3px 8px #001b4b88}
-.gameChooser{align-self:center;background:#061e58eF;border:2px solid #4ddfff;border-radius:16px;padding:6px;box-shadow:0 5px 14px #00163c99;max-height:88%;display:flex;flex-direction:column;min-width:0}
+.gameChooser{grid-column:2;grid-row:1;align-self:center;background:#061e58eF;border:2px solid #4ddfff;border-radius:16px;padding:6px;box-shadow:0 5px 14px #00163c99;max-height:88%;display:flex;flex-direction:column;min-width:0}
 .chooserTitle{display:flex;justify-content:space-between;align-items:center;font-size:12px;padding:1px 3px 5px;color:#fff}.chooserTitle button{min-height:24px;padding:2px 6px;font-size:9px;background:#0a55a8;border-color:#6bdcff}
 .homeGameRows{overflow:auto;min-height:0;max-height:42vh}.homeGameRow{display:flex;align-items:center;gap:6px;width:100%;min-height:43px;padding:5px 7px;margin:2px 0;background:#0a367b;border:1px solid #2d76bf;border-radius:9px;color:#fff;text-align:left;font-size:clamp(10px,2.4vw,15px);font-weight:bold}
 .homeGameRow.selected{border:3px solid #ffe52c;background:#164d9d;box-shadow:0 0 9px #ffe52c88}.homeGameRow .ball{font-size:22px;flex:none}.homeGameRow .gameName{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}.homeGameRow .goArrow{font-size:22px}
 .addGameRow{margin-top:5px;min-height:30px;background:#074b91;border:1px dashed #8ceaff;font-size:11px}
 .gameChooser.collapsed .homeGameRows,.gameChooser.collapsed .addGameRow{display:none}
 .gameChooser.collapsed{max-height:42px}
-.homeActions{display:flex;flex-direction:column;gap:5px;justify-content:center}
-.homeActions button{min-height:clamp(37px,10vh,55px);border:2px solid #ffffff88;border-radius:14px;color:#fff;font-size:clamp(16px,3vw,23px);font-weight:900;text-shadow:1px 2px #23385d;box-shadow:0 3px 6px #001b4b88;display:flex;align-items:center;justify-content:center;gap:8px;padding:4px}
-.homeActions button span{font-size:clamp(12px,2.4vw,17px)}
+.homeActions{grid-column:1/-1;grid-row:2;display:flex;flex-direction:row;gap:5px;justify-content:stretch;align-items:stretch;min-width:0}
+.homeActions button{flex:1;min-width:0;min-height:clamp(34px,8vh,44px);border:2px solid #ffffff88;border-radius:14px;color:#fff;font-size:clamp(16px,3vw,23px);font-weight:900;text-shadow:1px 2px #23385d;box-shadow:0 3px 6px #001b4b88;display:flex;align-items:center;justify-content:center;gap:8px;padding:4px}
+.homeActions button span{font-size:clamp(10px,2.1vw,15px);white-space:nowrap}
 .playAction{background:linear-gradient(#5dff62,#00b844)!important}.listAction{background:linear-gradient(#c17aff,#6a24d8)!important}.cheatAction{background:linear-gradient(#ffb94c,#f06a12)!important}.settingsAction{background:linear-gradient(#4fc7ff,#0877df)!important}.infoAction{background:linear-gradient(#ff77c0,#e51b82)!important}
 .bottomLegend{height:34px;min-height:34px;display:flex;align-items:center;justify-content:space-around;gap:3px;padding:2px 5px;background:#062c79;border-top:2px solid #56cfff;color:white;font-size:clamp(9px,2.2vw,14px);font-weight:bold}
 .bottomLegend button{min-height:25px;padding:1px 6px;background:#084b9b;border-color:#8ceaff;color:#fff}
 #hint{height:22px;min-height:22px;max-height:22px;border:0;background:#041b48;color:#bfefff;font-size:10px}
 #menu{top:48px;background:#061e58;border-color:#5bdfff}
 #panel{background:#061e3d;border-color:#5bdfff}
-@media(max-width:520px){.heroHead{height:46px;min-height:46px}.brandMark b{font-size:16px}.brandIcon{font-size:26px}.brandMark small{font-size:11px}.homeStage{grid-template-columns:minmax(72px,.72fr) minmax(155px,1.5fr) minmax(82px,.8fr);gap:4px;padding:6px 4px}.sceneText{padding:5px 4px}.homeGameRow{min-height:36px;padding:4px;font-size:10px}.homeGameRow .ball{font-size:17px}.chooserTitle{font-size:10px}.homeActions{gap:4px}.homeActions button{min-height:37px;border-radius:10px;font-size:15px}.homeActions button span{font-size:11px}.bottomLegend{font-size:9px}}
+@media(max-width:520px){.heroHead{height:46px;min-height:46px}.brandMark b{font-size:16px}.brandIcon{font-size:26px}.brandMark small{font-size:11px}.homeStage{grid-template-columns:minmax(72px,.72fr) minmax(155px,1.5fr) minmax(82px,.8fr);gap:4px;padding:6px 4px}.sceneText{padding:5px 4px}.homeGameRow{min-height:36px;padding:4px;font-size:10px}.homeGameRow .ball{font-size:17px}.chooserTitle{font-size:10px}.homeActions{gap:3px}.homeActions button{min-height:34px;border-radius:8px;font-size:clamp(10px,2.6vw,14px);padding:2px}.homeActions button span{font-size:clamp(8px,2vw,10px)}.bottomLegend{font-size:9px}}
 @media(max-height:420px){.heroHead{height:38px;min-height:38px}.homeStage{padding:4px;gap:5px}.homeActions button{min-height:29px}.homeGameRow{min-height:30px}.sceneText{font-size:9px}.mascot{font-size:48px}.bottomLegend{height:27px;min-height:27px}#hint{height:18px;min-height:18px;max-height:18px}}
-@media(max-width:360px){.sceneDecor{display:none}.homeStage{grid-template-columns:minmax(0,1fr) minmax(90px,.65fr)}.gameChooser{grid-column:1}.homeActions{grid-column:2;grid-row:1}.brandMark b{font-size:14px}}
+@media(max-width:360px){.sceneDecor{display:none}.homeStage{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto}.gameChooser{grid-column:1;grid-row:1}.homeActions{grid-column:1;grid-row:2}.brandMark b{font-size:14px}}
 \n.hw-focus{outline:3px solid #fff52d!important;box-shadow:0 0 0 3px #063a9c,0 0 14px #fff52d!important;filter:brightness(1.2)}\n</style></head><body>
 <header class="heroHead"><div class="brandMark"><span class="brandIcon">🎮</span><span><b>Game Pikachu</b><small>J36 Ultra</small></span></div><div class="headTools"><span class="battery">▰▰▰ 100%</span><button onclick="openPanel('controls')">⚙ Cài đặt</button></div></header>
 <div id="menu"><button onclick="pickRom()">＋ Thêm game / ROM</button><button onclick="pickRomFolder()">▣ Quét thư mục game</button><button onclick="openWallpaperPanel()">🖼 Hình nền</button><button onclick="openPanel('library')">▤ Thư viện game</button><button onclick="openPanel('controls')">⌖ Cài nút điều khiển</button><button onclick="openPanel('controller')">🎮 Tay cầm Bluetooth / OTG</button><button onclick="openPanel('graphics')">◈ Đồ họa & FPS</button><button onclick="openPanel('saves')">▣ Ô lưu game</button><button onclick="openPanel('cheats')">⚡ AutoCheat · Kho mã</button><button onclick="openPanel('network')">⇄ Chơi Online / Offline</button><button onclick="openPanel('ai')">🤖 Trợ lí AI</button><button onclick="openBackupPanel()">▣ Sao lưu / Khôi phục</button><button onclick="openPanel('emulator')">Chọn giả lập mGBA / My Boy!</button></div>
@@ -566,7 +566,13 @@ function saveSlot(){openPanel('saves')}
 function updateSlots(){}
 function savePrefs(){if(!saveLocal('graphics',{quality:$('quality').value,fps:$('fps').value}))return;$('hint').textContent='Đã lưu bộ lọc đồ họa và FPS · áp dụng khi mở game tiếp theo'}
 function virtualKey(k){handleHardwareKey(k)}
-let hardwareFocusIndex=0;
+let hardwareFocusIndex=0,analogLastDirection='';
+function handleHardwareAnalog(x,y){
+ const dead=.58;let direction='';
+ if(Math.abs(x)>dead||Math.abs(y)>dead){if(Math.abs(x)>Math.abs(y))direction=x<0?'LEFT':'RIGHT';else direction=y<0?'UP':'DOWN'}
+ if(direction===analogLastDirection)return;analogLastDirection=direction;
+ if(direction)handleHardwareKey(direction);
+}
 function hardwareFocusItems(){
  const items=[];
  const chooser=$('gameChooser');
