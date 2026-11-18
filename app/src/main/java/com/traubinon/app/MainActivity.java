@@ -35,6 +35,7 @@ public class MainActivity extends Activity {
   private WebView web;
   private TextToSpeech speech;
   private boolean speechReady = false;
+  private String lastAnalogDirection = "";
 
   @Override public void onCreate(Bundle state) {
     super.onCreate(state);
@@ -70,6 +71,7 @@ public class MainActivity extends Activity {
       code == android.view.KeyEvent.KEYCODE_BUTTON_Y ||
       code == android.view.KeyEvent.KEYCODE_BUTTON_START ||
       code == android.view.KeyEvent.KEYCODE_BUTTON_SELECT ||
+      code == android.view.KeyEvent.KEYCODE_BUTTON_MODE ||
       code == android.view.KeyEvent.KEYCODE_BUTTON_L1 ||
       code == android.view.KeyEvent.KEYCODE_BUTTON_R1;
     if (controllerKey) {
@@ -87,13 +89,40 @@ public class MainActivity extends Activity {
           case android.view.KeyEvent.KEYCODE_BUTTON_L1: action = "PREVIOUS"; break;
           case android.view.KeyEvent.KEYCODE_BUTTON_Y:
           case android.view.KeyEvent.KEYCODE_BUTTON_R1: action = "NEXT"; break;
-          case android.view.KeyEvent.KEYCODE_BUTTON_SELECT: action = "MENU"; break;
+          case android.view.KeyEvent.KEYCODE_BUTTON_SELECT:
+          case android.view.KeyEvent.KEYCODE_BUTTON_MODE: action = "MENU"; break;
         }
         if (action != null) web.evaluateJavascript("handleHardwareKey('" + action + "')", null);
       }
       return true;
     }
     return super.dispatchKeyEvent(event);
+  }
+
+  // Left analog navigates the launcher. In-game analog input is handled by SDL in EmulatorActivity.
+  @Override public boolean dispatchGenericMotionEvent(android.view.MotionEvent event) {
+    if ((event.getSource() & android.view.InputDevice.SOURCE_CLASS_JOYSTICK) != 0
+        && event.getAction() == android.view.MotionEvent.ACTION_MOVE && web != null) {
+      float x = event.getAxisValue(android.view.MotionEvent.AXIS_X);
+      float y = event.getAxisValue(android.view.MotionEvent.AXIS_Y);
+      float hatX = event.getAxisValue(android.view.MotionEvent.AXIS_HAT_X);
+      float hatY = event.getAxisValue(android.view.MotionEvent.AXIS_HAT_Y);
+      if (Math.abs(x) < 0.15f && Math.abs(y) < 0.15f) { x = hatX; y = hatY; }
+      String direction = "";
+      if (Math.abs(x) > 0.58f || Math.abs(y) > 0.58f) {
+        if (Math.abs(x) > Math.abs(y)) direction = x < 0 ? "LEFT" : "RIGHT";
+        else direction = y < 0 ? "UP" : "DOWN";
+      }
+      if (!direction.equals(lastAnalogDirection)) {
+        lastAnalogDirection = direction;
+        if (!direction.isEmpty()) {
+          final String action = direction;
+          web.post(() -> web.evaluateJavascript("handleHardwareKey('" + action + "')", null));
+        }
+      }
+      return true;
+    }
+    return super.dispatchGenericMotionEvent(event);
   }
 
   private void speakVietnamese(String text, boolean animeVoice) {
