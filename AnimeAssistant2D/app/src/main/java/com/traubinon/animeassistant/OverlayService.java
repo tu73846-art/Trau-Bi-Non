@@ -10,16 +10,47 @@ import android.widget.*;
 import java.util.Locale;
 
 public class OverlayService extends Service {
+    private static final String CHANNEL_ID = "anime_assistant_running";
+    private static final int NOTIFICATION_ID = 4102;
     WindowManager wm; View bubble, panel; TextToSpeech tts; boolean opened=false; String character="Nữ";
     int flags=WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE;
     int type=Build.VERSION.SDK_INT>=26?WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY:WindowManager.LayoutParams.TYPE_PHONE;
 
     @Override public void onCreate() {
         super.onCreate();
+        createNotificationChannel();
+        startForeground(NOTIFICATION_ID, buildNotification());
         wm=(WindowManager)getSystemService(WINDOW_SERVICE);
         tts=new TextToSpeech(this, status -> { if(status==TextToSpeech.SUCCESS) tts.setLanguage(new Locale("vi","VN")); });
         showBubble();
     }
+
+    private void createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= 26) {
+            NotificationChannel channel = new NotificationChannel(CHANNEL_ID, "Anime Assistant đang chạy", NotificationManager.IMPORTANCE_LOW);
+            channel.setDescription("Thông báo cho biết trợ lý nổi đang hoạt động.");
+            NotificationManager manager = getSystemService(NotificationManager.class);
+            if (manager != null) manager.createNotificationChannel(channel);
+        }
+    }
+
+    private Notification buildNotification() {
+        Intent open = new Intent(this, MainActivity.class);
+        int pendingFlags = PendingIntent.FLAG_UPDATE_CURRENT;
+        if (Build.VERSION.SDK_INT >= 23) pendingFlags |= PendingIntent.FLAG_IMMUTABLE;
+        PendingIntent pending = PendingIntent.getActivity(this, 0, open, pendingFlags);
+        Notification.Builder builder = Build.VERSION.SDK_INT >= 26
+            ? new Notification.Builder(this, CHANNEL_ID)
+            : new Notification.Builder(this);
+        return builder.setSmallIcon(android.R.drawable.ic_dialog_info)
+            .setContentTitle("Anime Assistant đang chạy")
+            .setContentText("Bong bóng ✦ vẫn hoạt động khi bạn dùng ứng dụng khác.")
+            .setContentIntent(pending)
+            .setOngoing(true)
+            .setCategory(Notification.CATEGORY_SERVICE)
+            .build();
+    }
+
     WindowManager.LayoutParams params(int w,int h,int f) {
         return new WindowManager.LayoutParams(w,h,type,f, PixelFormat.TRANSLUCENT);
     }
