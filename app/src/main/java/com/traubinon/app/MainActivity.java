@@ -20,6 +20,8 @@ import java.io.FileOutputStream;
 import java.io.InputStream;
 
 public class MainActivity extends Activity {
+  private static String gameLibraryJson = "[]";
+  private static int selectedGameIndex = 0;
   private static final int PICK_ROM = 410;
   private static final int PICK_ROM_FOLDER = 411;
   private WebView web;
@@ -139,6 +141,17 @@ public class MainActivity extends Activity {
       });
     }
 
+    @JavascriptInterface public void setGameLibrary(String json, int index) {
+      try {
+        JSONArray list = new JSONArray(json == null ? "[]" : json);
+        gameLibraryJson = list.toString();
+        selectedGameIndex = Math.max(0, Math.min(index, Math.max(0, list.length() - 1)));
+      } catch (Exception ignored) {
+        gameLibraryJson = "[]";
+        selectedGameIndex = 0;
+      }
+    }
+
     @JavascriptInterface public void openRom(String value, String quality, String fps) {
       runOnUiThread(() -> launchRom(Uri.parse(value), quality, fps));
     }
@@ -223,6 +236,8 @@ public class MainActivity extends Activity {
       if (backup.exists()) backup.delete();
       Intent game = new Intent(this, org.libsdl.app.EmulatorActivity.class);
       game.putExtra("rom_path", target.getAbsolutePath());
+      game.putExtra("rom_library_json", gameLibraryJson);
+      game.putExtra("rom_index", selectedGameIndex);
       String fpsValue = fps == null ? "60" : fps.replaceAll("[^0-9]", "");
       if (!"30".equals(fpsValue) && !"60".equals(fpsValue)) fpsValue = "60";
       game.putExtra("fps_target", fpsValue);
