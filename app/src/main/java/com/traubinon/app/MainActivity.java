@@ -1,7 +1,6 @@
 package com.traubinon.app;
 
 import android.app.Activity;
-import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
@@ -23,7 +22,6 @@ import java.io.InputStream;
 public class MainActivity extends Activity {
   private static final int PICK_ROM = 410;
   private static final int PICK_ROM_FOLDER = 411;
-  private static final String MYBOY_PACKAGE = "com.fastemulator.gba";
   private WebView web;
 
   @Override public void onCreate(Bundle state) {
@@ -59,51 +57,18 @@ public class MainActivity extends Activity {
       });
     }
 
-    @JavascriptInterface public boolean isMyBoyInstalled() {
-      try {
-        return getPackageManager().getPackageInfo(MYBOY_PACKAGE, 0) != null;
-      } catch (Exception ignored) {
-        return false;
-      }
-    }
-
-    @JavascriptInterface public void openMyBoy() {
+    // My Boy! compatibility mode runs through the bundled mGBA core.
+    // It deliberately does not launch or require the separate My Boy! application.
+    @JavascriptInterface public void openRomInMyBoy(String value, String quality, String fps) {
       runOnUiThread(() -> {
-        Intent i = getPackageManager().getLaunchIntentForPackage(MYBOY_PACKAGE);
-        if (i != null) {
-          i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-          startActivity(i);
-        } else Toast.makeText(MainActivity.this, "Chưa tìm thấy My Boy! Hãy cài My Boy trước.", Toast.LENGTH_LONG).show();
-      });
-    }
-
-    @JavascriptInterface public void openRomInMyBoy(String value) {
-      runOnUiThread(() -> {
+        if (value == null || value.trim().isEmpty()) {
+          Toast.makeText(MainActivity.this, "Chưa chọn ROM để chạy.", Toast.LENGTH_LONG).show();
+          return;
+        }
         try {
-          if (!isMyBoyInstalled()) {
-            Toast.makeText(MainActivity.this, "Chưa cài My Boy! Hãy cài My Boy rồi thử lại.", Toast.LENGTH_LONG).show();
-            return;
-          }
-          if (value == null || value.trim().isEmpty()) {
-            Toast.makeText(MainActivity.this, "Chưa chọn ROM để mở trong My Boy!.", Toast.LENGTH_LONG).show();
-            return;
-          }
-          Uri romUri = Uri.parse(value);
-          Intent i = new Intent(Intent.ACTION_VIEW);
-          i.setDataAndType(romUri, "application/octet-stream");
-          i.setPackage(MYBOY_PACKAGE);
-          i.addCategory(Intent.CATEGORY_DEFAULT);
-          i.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-          i.setClipData(android.content.ClipData.newUri(getContentResolver(), "GBA ROM", romUri));
-          if (i.resolveActivity(getPackageManager()) == null) {
-            Toast.makeText(MainActivity.this, "My Boy! không nhận được tệp ROM này. Hãy thử mở ROM bằng mGBA.", Toast.LENGTH_LONG).show();
-            return;
-          }
-          startActivity(i);
-        } catch (ActivityNotFoundException e) {
-          Toast.makeText(MainActivity.this, "My Boy! chưa cài hoặc không nhận được tệp ROM này.", Toast.LENGTH_LONG).show();
+          launchRom(Uri.parse(value), quality, fps);
         } catch (Exception e) {
-          Toast.makeText(MainActivity.this, "Không mở được ROM trong My Boy!: " + e.getMessage(), Toast.LENGTH_LONG).show();
+          Toast.makeText(MainActivity.this, "Không mở được ROM: " + e.getMessage(), Toast.LENGTH_LONG).show();
         }
       });
     }
