@@ -77,8 +77,42 @@ main.game-change-prev{animation:gameSlidePrev .24s ease-out}
 .gameKeyActions{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;margin-top:6px}
 .gameKeyActions button{min-width:0;min-height:32px;padding:4px 2px;font-size:10px}
 @media(max-width:380px){.gameKeyRow{gap:2px}.gameKeyRow button{min-height:30px;font-size:10px}.gameKeyActions button{font-size:9px;min-height:30px}}
+
+/* J36 Ultra home screen: landscape game-library layout inspired by the supplied reference. */
+html,body{background:#071b39;color:#f4fbff}
+body{padding:0;gap:0;background-image:radial-gradient(ellipse at 68% 12%,#a5e6ff 0 5%,transparent 28%),linear-gradient(180deg,#0878e8 0%,#1a9be9 44%,#2b9c5c 72%,#12502f 100%);background-size:cover;background-position:center}
+.heroHead{height:58px;min-height:58px;padding:5px 12px;border:0;border-radius:0;background:linear-gradient(90deg,#063d9cdd,#0878eacc);box-shadow:0 2px 8px #001b4b88;color:#fff}
+.brandMark{display:flex;align-items:center;gap:8px;font-size:20px;text-shadow:2px 3px #06235d}
+.brandIcon{font-size:32px}.brandMark b{font-size:21px;font-style:italic}.brandMark small{display:block;color:#ffeb28;font-size:14px;font-weight:900;font-style:italic;text-align:center}
+.headTools{display:flex;align-items:center;gap:7px}.battery{font-size:12px;font-weight:bold;background:#073c87;border:1px solid #69e6ff;border-radius:20px;padding:5px 8px}.heroHead button{background:#073d8c;border:1px solid #91eaff;color:white;min-height:31px}
+.homeStage{flex:1;min-height:0;display:grid;grid-template-columns:minmax(110px, .9fr) minmax(210px,1.5fr) minmax(105px,.78fr);gap:8px;padding:10px 9px 7px;align-items:center;position:relative;overflow:hidden;background:linear-gradient(180deg,#168eea44 0%,#0e8cbd33 45%,#14582f66 100%)}
+.homeStage:before{content:"";position:absolute;inset:48% 0 0;background:repeating-linear-gradient(0deg,#248d43 0 7px,#1c7739 7px 12px);opacity:.55;z-index:0}
+.sceneDecor,.gameChooser,.homeActions{position:relative;z-index:1}
+.sceneDecor{height:100%;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:8px}
+.pixelSun{position:absolute;width:62px;height:62px;border-radius:50%;background:#ffef8b;top:8%;right:12%;box-shadow:0 0 24px #fff4a7}
+.mascot{font-size:clamp(54px,13vw,112px);filter:drop-shadow(2px 5px 2px #18345c88);position:relative;z-index:1}.mascot span{font-size:32px;position:absolute;right:-10px;bottom:7px}
+.sceneText{background:#06285deF;border:1px solid #6adfff;border-radius:10px;padding:7px 9px;font-size:clamp(10px,2.4vw,15px);font-weight:bold;text-align:center;box-shadow:0 3px 8px #001b4b88}
+.gameChooser{align-self:center;background:#061e58eF;border:2px solid #4ddfff;border-radius:16px;padding:6px;box-shadow:0 5px 14px #00163c99;max-height:88%;display:flex;flex-direction:column;min-width:0}
+.chooserTitle{display:flex;justify-content:space-between;align-items:center;font-size:12px;padding:1px 3px 5px;color:#fff}.chooserTitle button{min-height:24px;padding:2px 6px;font-size:9px;background:#0a55a8;border-color:#6bdcff}
+.homeGameRows{overflow:auto;min-height:0;max-height:42vh}.homeGameRow{display:flex;align-items:center;gap:6px;width:100%;min-height:43px;padding:5px 7px;margin:2px 0;background:#0a367b;border:1px solid #2d76bf;border-radius:9px;color:#fff;text-align:left;font-size:clamp(10px,2.4vw,15px);font-weight:bold}
+.homeGameRow.selected{border:3px solid #ffe52c;background:#164d9d;box-shadow:0 0 9px #ffe52c88}.homeGameRow .ball{font-size:22px;flex:none}.homeGameRow .gameName{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}.homeGameRow .goArrow{font-size:22px}
+.addGameRow{margin-top:5px;min-height:30px;background:#074b91;border:1px dashed #8ceaff;font-size:11px}
+.gameChooser.collapsed .homeGameRows,.gameChooser.collapsed .addGameRow{display:none}
+.gameChooser.collapsed{max-height:42px}
+.homeActions{display:flex;flex-direction:column;gap:5px;justify-content:center}
+.homeActions button{min-height:clamp(37px,10vh,55px);border:2px solid #ffffff88;border-radius:14px;color:#fff;font-size:clamp(16px,3vw,23px);font-weight:900;text-shadow:1px 2px #23385d;box-shadow:0 3px 6px #001b4b88;display:flex;align-items:center;justify-content:center;gap:8px;padding:4px}
+.homeActions button span{font-size:clamp(12px,2.4vw,17px)}
+.playAction{background:linear-gradient(#5dff62,#00b844)!important}.listAction{background:linear-gradient(#c17aff,#6a24d8)!important}.cheatAction{background:linear-gradient(#ffb94c,#f06a12)!important}.settingsAction{background:linear-gradient(#4fc7ff,#0877df)!important}.infoAction{background:linear-gradient(#ff77c0,#e51b82)!important}
+.bottomLegend{height:34px;min-height:34px;display:flex;align-items:center;justify-content:space-around;gap:3px;padding:2px 5px;background:#062c79;border-top:2px solid #56cfff;color:white;font-size:clamp(9px,2.2vw,14px);font-weight:bold}
+.bottomLegend button{min-height:25px;padding:1px 6px;background:#084b9b;border-color:#8ceaff;color:#fff}
+#hint{height:22px;min-height:22px;max-height:22px;border:0;background:#041b48;color:#bfefff;font-size:10px}
+#menu{top:48px;background:#061e58;border-color:#5bdfff}
+#panel{background:#061e3d;border-color:#5bdfff}
+@media(max-width:520px){.heroHead{height:46px;min-height:46px}.brandMark b{font-size:16px}.brandIcon{font-size:26px}.brandMark small{font-size:11px}.homeStage{grid-template-columns:minmax(72px,.72fr) minmax(155px,1.5fr) minmax(82px,.8fr);gap:4px;padding:6px 4px}.sceneText{padding:5px 4px}.homeGameRow{min-height:36px;padding:4px;font-size:10px}.homeGameRow .ball{font-size:17px}.chooserTitle{font-size:10px}.homeActions{gap:4px}.homeActions button{min-height:37px;border-radius:10px;font-size:15px}.homeActions button span{font-size:11px}.bottomLegend{font-size:9px}}
+@media(max-height:420px){.heroHead{height:38px;min-height:38px}.homeStage{padding:4px;gap:5px}.homeActions button{min-height:29px}.homeGameRow{min-height:30px}.sceneText{font-size:9px}.mascot{font-size:48px}.bottomLegend{height:27px;min-height:27px}#hint{height:18px;min-height:18px;max-height:18px}}
+@media(max-width:360px){.sceneDecor{display:none}.homeStage{grid-template-columns:minmax(0,1fr) minmax(90px,.65fr)}.gameChooser{grid-column:1}.homeActions{grid-column:2;grid-row:1}.brandMark b{font-size:14px}}
 </style></head><body>
-<header><span>🐃 TRÂU BI NON</span><span><button id="aiToggle" type="button" aria-pressed="false" onclick="toggleAIAssistant()"><i class="ai-dot"></i><span id="aiToggleText">AI · TẮT</span></button> <button onclick="toggleSearch()">⌕ TÌM</button> <button onclick="toggleMenu()">⋮</button></span></header>
+<header class="heroHead"><div class="brandMark"><span class="brandIcon">🎮</span><span><b>Trâu Bi Non</b><small>J36 Ultra</small></span></div><div class="headTools"><span class="battery">▰▰▰ 100%</span><button onclick="openPanel('controls')">⚙ Cài đặt</button></div></header>
 <div id="searchbar">
  <input id="searchInput" placeholder="Chọn chữ bên dưới để tìm game..." readonly aria-label="Tên game tìm kiếm">
  <div id="gameKeyboard" aria-label="Bàn phím tìm kiếm">
@@ -91,10 +125,23 @@ main.game-change-prev{animation:gameSlidePrev .24s ease-out}
  <div id="searchResults"></div><button onclick="toggleSearch()">ĐÓNG</button>
 </div>
 <div id="menu"><button onclick="pickRom()">＋ Thêm game / ROM</button><button onclick="pickRomFolder()">▣ Quét thư mục game trong bộ nhớ</button><button onclick="openWallpaperPanel()">🖼 Hình nền giao diện chính</button><button onclick="openPanel('library')">▤ Thư viện game</button><button onclick="openPanel('controls')">⌖ Cài nút điều khiển</button><button onclick="openPanel('controller')">🎮 Tay cầm Bluetooth / OTG</button><button onclick="openPanel('graphics')">◈ Đồ họa & FPS</button><button onclick="openPanel('saves')">▣ Ô lưu game</button><button onclick="openPanel('cheats')">⚡ AutoCheat · Kho mã</button><button onclick="openPanel('network')">⇄ Chơi Online / Offline</button><button onclick="openPanel('ai')">🤖 Trợ lí AI · Giới tính</button><button onclick="openBackupPanel()">▣ Sao lưu / Khôi phục</button><button onclick="openPanel('emulator')">3. CHỌN GIẢ LẬP · mGBA / MY BOY!</button><button onclick="openMyBoy()">▶ Chạy chế độ My Boy!</button></div>
-<main><div class="tile" id="prev" onclick="shift(-1)">TRƯỚC</div><div class="tile big" id="current">CHƯA CÓ GAME<small>Thêm ROM để bắt đầu</small></div><div class="tile" id="next" onclick="shift(1)">TIẾP</div></main>
-<div class="actions"><button onclick="pickRom()">＋ THÊM GAME</button><button onclick="launchCurrent()">▶ CHẠY GAME</button><button onclick="openMyBoy()">MY BOY!</button></div>
-<footer><button class="blue" onclick="virtualKey('UP')">↑</button><button class="blue" onclick="virtualKey('LEFT')">←</button><button onclick="saveSlot()">SL · OK</button><button class="blue" onclick="virtualKey('RIGHT')">→</button><button class="blue" onclick="virtualKey('DOWN')">↓</button></footer>
-<div id="hint">A · B · X · Y · SL · ST  |  Vuốt trái / phải để đổi game</div>
+<section class="homeStage">
+ <div class="sceneDecor"><div class="pixelSun"></div><div class="mascot">🐲<span>🔴</span></div><div class="sceneText">Chọn game<br>để bắt đầu chơi!</div></div>
+ <div class="gameChooser" id="gameChooser">
+  <div class="chooserTitle"><b>🎮 THƯ VIỆN GAME</b><button id="collapseGames" onclick="toggleGameChooser()" aria-expanded="true">Thu gọn ▴</button></div>
+  <div id="homeGameRows" class="homeGameRows"></div>
+  <button class="addGameRow" onclick="pickRom()">＋ Thêm game / ROM</button>
+ </div>
+ <aside class="homeActions">
+  <button class="playAction" onclick="launchCurrent()">▶ <span>Chơi Game</span></button>
+  <button class="listAction" onclick="openPanel('library')">▤ <span>Danh Sách</span></button>
+  <button class="cheatAction" onclick="openPanel('cheats')">★ <span>Cheat</span></button>
+  <button class="settingsAction" onclick="openPanel('controls')">🔧 <span>Cài Đặt</span></button>
+  <button class="infoAction" onclick="openPanel('emulator')">ⓘ <span>Thông Tin</span></button>
+ </aside>
+</section>
+<div class="bottomLegend"><span>✥ Chọn</span><span>Ⓐ Xác Nhận</span><span>Ⓑ Quay Lại</span><span>Ⓛ / Ⓡ Chuyển Tab</span><button onclick="toggleGameChooser()" title="Thu gọn / mở danh sách">▱</button></div>
+<div id="hint">Chọn game trong danh sách rồi nhấn CHƠI GAME</div>
 <div id="panel"><button class="close" onclick="closePanel()">ĐÓNG ✕</button><div id="panelBody"></div></div>
 <input id="cheatImport" type="file" accept=".txt,.cht,.json" style="display:none" onchange="importCheatFile(this.files[0])">
 <input id="backupImport" type="file" accept=".json,application/json" style="display:none" onchange="importBackupFile(this.files[0])">
@@ -258,7 +305,10 @@ function pickRom(){ $('menu').style.display='none';if(window.AndroidBridge)Andro
 function pickRomFolder(){ $('menu').style.display='none';if(window.AndroidBridge&&AndroidBridge.pickRomFolder)AndroidBridge.pickRomFolder();else alert('Quét thư mục cần chạy trên bản Android.')}
 function addGamesFromAndroid(payload){try{const items=JSON.parse(String(payload||'[]'));let added=0;for(const item of items){const name=String(item.name||'').trim().slice(0,180),uri=String(item.uri||'').trim();if(!name||!uri||games.some(g=>g.uri===uri))continue;games.push({name,uri});added++;}if(added&&!persist()){renderGames();return;}index=Math.max(0,games.length-1);renderGames();$('hint').textContent=added?'Đã thêm '+added+' game từ thư mục bộ nhớ.':'Không tìm thấy game mới trong thư mục đã chọn.';}catch(e){$('hint').textContent='Không đọc được danh sách game: '+e.message;}}
 function addGameFromAndroid(name,uri){name=String(name||'').trim().slice(0,180);uri=String(uri||'').trim();if(!name||!uri){$('hint').textContent='Không thể thêm ROM: tên hoặc đường dẫn không hợp lệ.';return}let found=games.findIndex(g=>g.uri===uri);if(found>=0){index=found;$('hint').textContent='ROM này đã có trong thư viện.';renderGames();return}games.push({name,uri});index=games.length-1;if(!persist()){games.pop();index=Math.max(0,Math.min(index,games.length-1));renderGames();return}renderGames();$('hint').textContent='Đã thêm: '+name+' · Nhấn CHẠY GAME'}
-function renderGames(){let q=$('searchInput')?.value?.toLowerCase()||'';let filtered=games.filter(g=>g.name.toLowerCase().includes(q));let g=games[index];$('current').innerHTML=g?escapeHtml(g.name)+'<small>'+ (index+1)+' / '+games.length+' GAME</small>':'CHƯA CÓ GAME<small>Thêm ROM để bắt đầu</small>';let p=games[(index-1+games.length)%games.length],n=games[(index+1)%games.length];$('prev').textContent=p?p.name:'TRƯỚC';$('next').textContent=n?n.name:'TIẾP';let list=$('gameList');if(list)list.innerHTML=filtered.map(x=>'<div class="gameRow"><span>'+escapeHtml(x.name)+'</span><button onclick="selectGameByUri(&quot;'+encodeURIComponent(x.uri)+'&quot;)">CHỌN</button><button class="red" onclick="removeGameByUri(&quot;'+encodeURIComponent(x.uri)+'&quot;)">XÓA</button></div>').join('')||'<p class="muted">Chưa có game phù hợp.</p>';let results=$('searchResults');if(results)results.innerHTML=q?filtered.map(x=>'<button onclick="selectGameByUri(&quot;'+encodeURIComponent(x.uri)+'&quot;)">'+escapeHtml(x.name)+'</button>').join('')||'<p class="muted">Không tìm thấy game phù hợp.</p>':''}
+function renderGames(){let q=$('searchInput')?.value?.toLowerCase()||'';let filtered=games.filter(g=>g.name.toLowerCase().includes(q));let g=games[index];$('current').innerHTML=g?escapeHtml(g.name)+'<small>'+ (index+1)+' / '+games.length+' GAME</small>':'CHƯA CÓ GAME<small>Thêm ROM để bắt đầu</small>';let p=games[(index-1+games.length)%games.length],n=games[(index+1)%games.length];$('prev').textContent=p?p.name:'TRƯỚC';$('next').textContent=n?n.name:'TIẾP';let list=$('gameList');if(list)list.innerHTML=filtered.map(x=>'<div class="gameRow"><span>'+escapeHtml(x.name)+'</span><button onclick="selectGameByUri(&quot;'+encodeURIComponent(x.uri)+'&quot;)">CHỌN</button><button class="red" onclick="removeGameByUri(&quot;'+encodeURIComponent(x.uri)+'&quot;)">XÓA</button></div>').join('')||'<p class="muted">Chưa có game phù hợp.</p>';let results=$('searchResults');if(results)results.innerHTML=q?filtered.map(x=>'<button onclick="selectGameByUri(&quot;'+encodeURIComponent(x.uri)+'&quot;)">'+escapeHtml(x.name)+'</button>').join('')||'<p class="muted">Không tìm thấy game phù hợp.</p>':'';renderHomeGames()}
+function renderHomeGames(){const box=$('homeGameRows');if(!box)return;box.innerHTML=games.map((g,i)=>'<button class="homeGameRow '+(i===index?'selected':'')+'" onclick="chooseHomeGame('+i+')"><span class="ball">🔴</span><span class="gameName">'+escapeHtml(g.name)+'</span><span class="goArrow">›</span></button>').join('')||'<div class="homeGameRow">Chưa có game · Thêm ROM để bắt đầu</div>';}
+function chooseHomeGame(i){if(i<0||i>=games.length)return;index=i;renderGames();$('hint').textContent='Đã chọn: '+games[index].name;}
+function toggleGameChooser(){const el=$('gameChooser');if(!el)return;const collapsed=el.classList.toggle('collapsed');const btn=$('collapseGames');if(btn){btn.textContent=collapsed?'Mở danh sách ▾':'Thu gọn ▴';btn.setAttribute('aria-expanded',collapsed?'false':'true');}}
 function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function selectGameByUri(u){let uri=decodeURIComponent(u);index=games.findIndex(g=>g.uri===uri);closePanel();if($('searchbar').style.display==='block')toggleSearch();renderGames();$('hint').textContent='Đã chọn: '+(games[index]?.name||'game')}
 function removeGameByUri(u){
