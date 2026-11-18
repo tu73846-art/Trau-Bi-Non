@@ -60,6 +60,13 @@ class SmokeTests(unittest.TestCase):
         self.assertIn("parseLibretroCheatFile(", self.html)
         self.assertIn("enabled:false", self.html)
 
+    def test_external_gamepad_support_and_discovery(self):
+        self.assertIn('getConnectedControllers()', self.java)
+        self.assertIn('InputDevice.SOURCE_GAMEPAD', self.java)
+        self.assertIn('InputDevice.SOURCE_CLASS_JOYSTICK', self.java)
+        self.assertIn("openPanel('controller')", self.html)
+        self.assertIn('refreshControllerList()', self.html)
+        self.assertIn('android.hardware.usb.host', self.manifest)
     def test_inline_javascript_parses(self):
         node = shutil.which("node")
         if not node:
