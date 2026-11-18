@@ -79,7 +79,8 @@ public final class EmulatorActivity extends SDLActivity {
         catch (Exception ignored) { romLibrary = new JSONArray(); }
         romIndex = getIntent().getIntExtra("rom_index", 0);
         super.onCreate(state);
-        setupTouchControls();
+        // Touch controls are drawn and handled in native android-ui.c.
+        // Do not place a Java overlay over SDL's SurfaceView: it intercepts SDL finger events.
         setupTranslationOverlay();
         translationHandler.postDelayed(translationLoop, 1600);
     }
@@ -294,6 +295,11 @@ public final class EmulatorActivity extends SDLActivity {
             if (code == KeyEvent.KEYCODE_VOLUME_DOWN) {
                 switchGame(-1); return true;
             }
+        }
+        // Route physical keyboard/gamepad key events directly through SDL's input bridge.
+        // SDL distinguishes registered gamepads from ordinary keyboard devices here.
+        if (mSurface != null && SDLActivity.handleKeyEvent(mSurface, event.getKeyCode(), event, null)) {
+            return true;
         }
         return super.dispatchKeyEvent(event);
     }
