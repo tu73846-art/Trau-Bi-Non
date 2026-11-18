@@ -4,6 +4,9 @@ on:
   workflow_dispatch:
   push:
     branches: [ main, single-apk-mgba-myboy-mode ]
+concurrency:
+  group: android-build-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   build:
     runs-on: ubuntu-latest
