@@ -25,14 +25,13 @@ import com.google.mlkit.nl.translate.TranslateLanguage;
 import com.google.mlkit.nl.translate.Translation;
 import com.google.mlkit.nl.translate.Translator;
 import com.google.mlkit.nl.translate.TranslatorOptions;
-import com.google.mlkit.nl.translate.TranslateRemoteModel;
-import com.google.mlkit.nl.translate.TranslateRemoteModel;
 import com.google.mlkit.vision.common.InputImage;
 import com.google.mlkit.vision.text.Text;
 import com.google.mlkit.vision.text.TextRecognition;
 import com.google.mlkit.vision.text.TextRecognizer;
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions;
 import com.google.mlkit.vision.text.japanese.JapaneseTextRecognizerOptions;
+import com.google.mlkit.vision.text.chinese.ChineseTextRecognizerOptions;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -58,6 +57,7 @@ public final class EmulatorActivity extends SDLActivity {
     private TextView translationOverlay;
     private TextRecognizer latinRecognizer;
     private TextRecognizer japaneseRecognizer;
+    private TextRecognizer chineseRecognizer;
     private Translator translator;
 
     private final Runnable translationLoop = new Runnable() {
@@ -82,6 +82,7 @@ public final class EmulatorActivity extends SDLActivity {
         if (mLayout == null) return;
         latinRecognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS);
         japaneseRecognizer = TextRecognition.getClient(new JapaneseTextRecognizerOptions.Builder().build());
+        chineseRecognizer = TextRecognition.getClient(new ChineseTextRecognizerOptions.Builder().build());
 
         translationButton = new TextView(this);
         translationButton.setText("DỊCH: TẮT");
@@ -136,7 +137,7 @@ public final class EmulatorActivity extends SDLActivity {
                     bitmap.recycle(); ocrBusy = false; return;
                 }
                 InputImage image = InputImage.fromBitmap(bitmap, 0);
-                Tasks.whenAllSuccess(latinRecognizer.process(image), japaneseRecognizer.process(image))
+                Tasks.whenAllSuccess(latinRecognizer.process(image), japaneseRecognizer.process(image), chineseRecognizer.process(image))
                     .addOnSuccessListener(results -> {
                         bitmap.recycle();
                         ocrBusy = false;
@@ -258,6 +259,7 @@ public final class EmulatorActivity extends SDLActivity {
         translationHandler.removeCallbacksAndMessages(null);
         if (latinRecognizer != null) latinRecognizer.close();
         if (japaneseRecognizer != null) japaneseRecognizer.close();
+        if (chineseRecognizer != null) chineseRecognizer.close();
         if (translator != null) translator.close();
         super.onDestroy();
     }
