@@ -15,6 +15,10 @@ import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebChromeClient;
 import android.widget.Toast;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.util.Base64;
+import java.io.ByteArrayOutputStream;
 import android.speech.tts.TextToSpeech;
 import android.speech.tts.Voice;
 import java.util.Locale;
@@ -27,6 +31,7 @@ public class MainActivity extends Activity {
   private static int selectedGameIndex = 0;
   private static final int PICK_ROM = 410;
   private static final int PICK_ROM_FOLDER = 411;
+  private static final int PICK_WALLPAPER = 412;
   private WebView web;
   private TextToSpeech speech;
   private boolean speechReady = false;
@@ -136,6 +141,16 @@ public class MainActivity extends Activity {
         i.setType("*/*");
         i.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
         startActivityForResult(i, PICK_ROM);
+      });
+    }
+
+    @JavascriptInterface public void pickWallpaper() {
+      runOnUiThread(() -> {
+        Intent i = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+        i.addCategory(Intent.CATEGORY_OPENABLE);
+        i.setType("image/*");
+        i.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        startActivityForResult(i, PICK_WALLPAPER);
       });
     }
 
@@ -349,6 +364,27 @@ public class MainActivity extends Activity {
 
   @Override protected void onActivityResult(int requestCode, int resultCode, Intent data) {
     super.onActivityResult(requestCode, resultCode, data);
+    if (requestCode == PICK_WALLPAPER && resultCode == RESULT_OK && data != null && data.getData() != null) {
+      try (InputStream in = getContentResolver().openInputStream(data.getData())) {
+        if (in == null) throw new IllegalStateException("Không đọc được ảnh");
+        Bitmap source = BitmapFactory.decodeStream(in);
+        if (source == null) throw new IllegalStateException("Tệp ảnh không hợp lệ");
+        int width = source.getWidth(), height = source.getHeight();
+        float scale = Math.min(1f, 1280f / Math.max(width, height));
+        Bitmap resized = scale < 1f ? Bitmap.createScaledBitmap(source, Math.max(1, Math.round(width * scale)), Math.max(1, Math.round(height * scale)), true) : source;
+        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+        resized.compress(Bitmap.CompressFormat.JPEG, 82, bytes);
+        String encoded = "data:image/jpeg;base64," + Base64.encodeToString(bytes.toByteArray(), Base64.NO_WRAP);
+        String quoted = JSONObject.quote(encoded);
+        if (web != null) web.post(() -> web.evaluateJavascript("applyWallpaperData(" + quoted + ")", null));
+        if (resized != source) resized.recycle();
+        source.recycle();
+        Toast.makeText(this, "Đã cập nhật hình nền.", Toast.LENGTH_SHORT).show();
+      } catch (Exception e) {
+        Toast.makeText(this, "Không đặt được hình nền: " + e.getMessage(), Toast.LENGTH_LONG).show();
+      }
+      return;
+    }
     if (requestCode == PICK_ROM_FOLDER && resultCode == RESULT_OK && data != null && data.getData() != null) {
       scanRomFolder(data.getData());
       return;
