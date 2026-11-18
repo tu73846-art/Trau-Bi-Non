@@ -46,8 +46,14 @@ body{min-height:0;min-height:100dvh}
 }
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
 
+
+#aiToggle{display:inline-flex;align-items:center;gap:5px;min-height:27px;padding:3px 8px;border-radius:18px;border:1px solid #54717c;background:#101c22;color:#a7bbc2;font-size:10px;letter-spacing:.2px}
+#aiToggle .ai-dot{width:8px;height:8px;border-radius:50%;background:#71818a;box-shadow:0 0 0 2px #71818a22}
+#aiToggle[aria-pressed="true"]{border-color:#19dcff;background:linear-gradient(110deg,#063b4b,#102b38);color:#d9fbff;box-shadow:0 0 10px #00d9ff55}
+#aiToggle[aria-pressed="true"] .ai-dot{background:#42f5bd;box-shadow:0 0 8px #42f5bd}
+@media(max-width:380px){#aiToggle{font-size:9px;padding:3px 6px;gap:4px}}
 </style></head><body>
-<header><span>🐃 TRÂU BI NON</span><span><button onclick="toggleSearch()">⌕ TÌM</button> <button onclick="toggleMenu()">⋮</button></span></header>
+<header><span>🐃 TRÂU BI NON</span><span><button id="aiToggle" type="button" aria-pressed="false" onclick="toggleAIAssistant()"><i class="ai-dot"></i><span id="aiToggleText">AI · TẮT</span></button> <button onclick="toggleSearch()">⌕ TÌM</button> <button onclick="toggleMenu()">⋮</button></span></header>
 <div id="searchbar"><input id="searchInput" placeholder="Nhập tên game để tìm..." oninput="renderGames()"><div id="searchResults"></div><button onclick="toggleSearch()">ĐÓNG</button></div>
 <div id="menu"><button onclick="pickRom()">＋ Thêm game / ROM</button><button onclick="pickRomFolder()">▣ Quét thư mục game trong bộ nhớ</button><button onclick="openPanel('library')">▤ Thư viện game</button><button onclick="openPanel('controls')">⌖ Cài nút điều khiển</button><button onclick="openPanel('graphics')">◈ Đồ họa & FPS</button><button onclick="openPanel('saves')">▣ Ô lưu game</button><button onclick="openPanel('cheats')">⚡ AutoCheat · Kho mã</button><button onclick="openPanel('network')">⇄ Chơi Online / Offline</button><button onclick="openBackupPanel()">▣ Sao lưu / Khôi phục</button><button onclick="openMyBoy()">▶ Mở My Boy!</button></div>
 <main><div class="tile" id="prev" onclick="shift(-1)">TRƯỚC</div><div class="tile big" id="current">CHƯA CÓ GAME<small>Thêm ROM để bắt đầu</small></div><div class="tile" id="next" onclick="shift(1)">TIẾP</div></main>
@@ -76,6 +82,22 @@ Object.keys(cheats).forEach(k=>{
 });
 function persist(){return saveLocal('games',games)}
 function toggleMenu(){ $('menu').style.display=$('menu').style.display==='block'?'none':'block'}
+let aiAssistantEnabled=safeLoad('aiAssistantEnabled',false)===true;
+function syncAIAssistantButton(){
+ const btn=$('aiToggle'),label=$('aiToggleText');
+ if(!btn||!label)return;
+ btn.setAttribute('aria-pressed',aiAssistantEnabled?'true':'false');
+ label.textContent=aiAssistantEnabled?'AI · BẬT':'AI · TẮT';
+}
+function toggleAIAssistant(){
+ aiAssistantEnabled=!aiAssistantEnabled;
+ saveLocal('aiAssistantEnabled',aiAssistantEnabled);
+ syncAIAssistantButton();
+ $('hint').textContent=aiAssistantEnabled
+  ?'Trợ lí game AI đã bật · nhân vật 3D xoay 360° sẽ xuất hiện trong khu vực trợ lí khi hoàn thiện.'
+  :'Trợ lí game AI đã tắt.';
+}
+
 function toggleSearch(){ $('searchbar').style.display=$('searchbar').style.display==='block'?'none':'block';if($('searchbar').style.display==='block')$('searchInput').focus();else{$('searchInput').value='';renderGames()}}
 function pickRom(){ $('menu').style.display='none';if(window.AndroidBridge)AndroidBridge.pickRom();else alert('Chọn ROM cần chạy trên bản Android.')}
 function pickRomFolder(){ $('menu').style.display='none';if(window.AndroidBridge&&AndroidBridge.pickRomFolder)AndroidBridge.pickRomFolder();else alert('Quét thư mục cần chạy trên bản Android.')}
@@ -317,4 +339,5 @@ function savePrefs(){if(!saveLocal('graphics',{quality:$('quality').value,fps:$(
 function virtualKey(k){$('hint').textContent='Nút '+k+' được nhấn · cần lõi giả lập để điều khiển game'}
 let startX=0,startY=0,swipeEligible=false;document.addEventListener('touchstart',e=>{const t=e.target;swipeEligible=!!t.closest('main,.tile')&&!t.closest('button,input,select,textarea');if(swipeEligible){startX=e.changedTouches[0].screenX;startY=e.changedTouches[0].screenY}},{passive:true});document.addEventListener('touchend',e=>{if(!swipeEligible)return;swipeEligible=false;const dx=e.changedTouches[0].screenX-startX,dy=e.changedTouches[0].screenY-startY;if(Math.abs(dx)>65&&Math.abs(dx)>Math.abs(dy)*1.25)shift(dx<0?1:-1)},{passive:true});document.addEventListener('keydown',e=>{if(e.key==='Escape'){closePanel();$('menu').style.display='none';$('searchbar').style.display='none'}});
 renderGames();
+syncAIAssistantButton();
 </script></body></html>
