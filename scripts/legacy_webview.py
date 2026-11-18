@@ -2,7 +2,7 @@
 import pathlib, re, subprocess, tempfile, sys
 path = pathlib.Path("app/src/main/assets/index.html")
 html = path.read_text(encoding="utf-8")
-matches = list(re.finditer(r"<script>([\\s\\S]*?)</script>", html, re.I))
+matches = list(re.finditer(r"<script>([\s\S]*?)</script>", html, re.I))
 if len(matches) != 1:
     raise SystemExit("Expected exactly one inline application script")
 source = matches[0].group(1)
