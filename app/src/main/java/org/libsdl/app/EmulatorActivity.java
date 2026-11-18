@@ -32,6 +32,7 @@ import com.google.mlkit.vision.text.TextRecognizer;
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions;
 import com.google.mlkit.vision.text.japanese.JapaneseTextRecognizerOptions;
 import com.google.mlkit.vision.text.chinese.ChineseTextRecognizerOptions;
+import com.google.mlkit.vision.text.korean.KoreanTextRecognizerOptions;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -58,6 +59,7 @@ public final class EmulatorActivity extends SDLActivity {
     private TextRecognizer latinRecognizer;
     private TextRecognizer japaneseRecognizer;
     private TextRecognizer chineseRecognizer;
+    private TextRecognizer koreanRecognizer;
     private Translator translator;
 
     private final Runnable translationLoop = new Runnable() {
@@ -83,6 +85,7 @@ public final class EmulatorActivity extends SDLActivity {
         latinRecognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS);
         japaneseRecognizer = TextRecognition.getClient(new JapaneseTextRecognizerOptions.Builder().build());
         chineseRecognizer = TextRecognition.getClient(new ChineseTextRecognizerOptions.Builder().build());
+        koreanRecognizer = TextRecognition.getClient(new KoreanTextRecognizerOptions.Builder().build());
 
         translationButton = new TextView(this);
         translationButton.setText("DỊCH: TẮT");
@@ -137,7 +140,7 @@ public final class EmulatorActivity extends SDLActivity {
                     bitmap.recycle(); ocrBusy = false; return;
                 }
                 InputImage image = InputImage.fromBitmap(bitmap, 0);
-                Tasks.whenAllSuccess(latinRecognizer.process(image), japaneseRecognizer.process(image), chineseRecognizer.process(image))
+                Tasks.whenAllSuccess(latinRecognizer.process(image), japaneseRecognizer.process(image), chineseRecognizer.process(image), koreanRecognizer.process(image))
                     .addOnSuccessListener(results -> {
                         bitmap.recycle();
                         ocrBusy = false;
@@ -260,6 +263,7 @@ public final class EmulatorActivity extends SDLActivity {
         if (latinRecognizer != null) latinRecognizer.close();
         if (japaneseRecognizer != null) japaneseRecognizer.close();
         if (chineseRecognizer != null) chineseRecognizer.close();
+        if (koreanRecognizer != null) koreanRecognizer.close();
         if (translator != null) translator.close();
         super.onDestroy();
     }
