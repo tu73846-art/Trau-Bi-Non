@@ -130,7 +130,7 @@ let aiSpeechMode=safeLoad('aiSpeechMode','anime');
 if(!['anime','chat','online'].includes(aiSpeechMode))aiSpeechMode='anime';
 let aiOnlineEndpoint=safeLoad('aiOnlineEndpoint','');
 let aiOnlineHistory=[];
-function saveAIEndpoint(){const field=$('aiEndpoint');if(!field)return;aiOnlineEndpoint=field.value.trim().replace(/\\/$/,'');saveLocal('aiOnlineEndpoint',aiOnlineEndpoint);const note=$('aiEndpointStatus');if(note)note.textContent=aiOnlineEndpoint?'Đã lưu địa chỉ máy chủ trên thiết bị.':'Chưa cài địa chỉ máy chủ AI.';}
+function saveAIEndpoint(){const field=$('aiEndpoint');if(!field)return;aiOnlineEndpoint=field.value.trim().replace(/\/+$/,'');saveLocal('aiOnlineEndpoint',aiOnlineEndpoint);const note=$('aiEndpointStatus');if(note)note.textContent=aiOnlineEndpoint?'Đã lưu địa chỉ máy chủ trên thiết bị.':'Chưa cài địa chỉ máy chủ AI.';}
 function setAISpeechMode(mode){
  if(!['anime','chat','online'].includes(mode))return;
  aiSpeechMode=mode;saveLocal('aiSpeechMode',mode);
