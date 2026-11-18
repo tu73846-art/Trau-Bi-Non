@@ -25,7 +25,7 @@ public class MainActivity extends Activity {
         title.setTextColor(0xFFFFFFFF); title.setTextSize(21); title.setGravity(Gravity.CENTER);
         root.addView(title, new LinearLayout.LayoutParams(-1,-2));
         TextView desc = new TextView(this);
-        desc.setText("\\nTương thích mục tiêu Android 5.0 trở lên.\\n\\nTrợ lý anime nổi trên màn hình khi bạn chơi game.\\n\\n1. Cấp quyền hiển thị trên ứng dụng khác (Android 6+).\\n2. Bật trợ lý nổi.\\n3. Mở My Boy và chạm bong bóng để trò chuyện.");
+        desc.setText("\nTrợ lý nổi có thể tiếp tục chạy khi bạn chuyển sang ứng dụng hoặc trò chơi khác.\n\n1. Cấp quyền hiển thị trên ứng dụng khác.\n2. Bấm BẬT TRỢ LÝ NỔI.\n3. Chuyển sang game; bong bóng ✦ sẽ vẫn hiển thị.\n4. Dùng thông báo “Anime Assistant đang chạy” để biết dịch vụ còn hoạt động.");
         desc.setTextColor(0xFFE1E5F5); desc.setTextSize(16);
         root.addView(desc);
         Button permission = new Button(this); permission.setText("CẤP QUYỀN HIỂN THỊ");
@@ -34,18 +34,27 @@ public class MainActivity extends Activity {
                 Intent i = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:"+getPackageName()));
                 startActivity(i);
             } else {
-                Toast.makeText(this,"Thiết bị Android 5.x: hãy bật quyền cửa sổ nổi trong cài đặt nếu hệ thống yêu cầu.",Toast.LENGTH_LONG).show();
+                Toast.makeText(this,"Đã có quyền hiển thị cửa sổ nổi.",Toast.LENGTH_SHORT).show();
             }
         });
         root.addView(permission);
-        Button start = new Button(this); start.setText("BẬT TRỢ LÝ NỔI");
+        Button start = new Button(this); start.setText("BẬT TRỢ LÝ NỔI / CHẠY NỀN");
         start.setOnClickListener(v -> {
-            if (hasOverlayPermission()) startService(new Intent(this, OverlayService.class));
-            else Toast.makeText(this,"Hãy cấp quyền hiển thị trước",Toast.LENGTH_LONG).show();
+            if (!hasOverlayPermission()) {
+                Toast.makeText(this,"Hãy cấp quyền hiển thị trước",Toast.LENGTH_LONG).show();
+                return;
+            }
+            Intent service = new Intent(this, OverlayService.class);
+            if (Build.VERSION.SDK_INT >= 26) startForegroundService(service);
+            else startService(service);
+            Toast.makeText(this,"Trợ lý đang chạy nền",Toast.LENGTH_SHORT).show();
         });
         root.addView(start);
         Button stop = new Button(this); stop.setText("TẮT TRỢ LÝ");
-        stop.setOnClickListener(v -> stopService(new Intent(this, OverlayService.class)));
+        stop.setOnClickListener(v -> {
+            stopService(new Intent(this, OverlayService.class));
+            Toast.makeText(this,"Đã tắt trợ lý nổi",Toast.LENGTH_SHORT).show();
+        });
         root.addView(stop);
         setContentView(root);
     }
