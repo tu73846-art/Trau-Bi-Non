@@ -37,22 +37,23 @@ class SmokeTests(unittest.TestCase):
         cls.html = (ROOT / "app/src/main/assets/index.html").read_text()
         cls.manifest = (ROOT / "app/src/main/AndroidManifest.xml").read_text()
 
-    def test_myboy_bridge_checks_install_and_grants_uri(self):
-        self.assertIn('MYBOY_PACKAGE = "com.fastemulator.gba"', self.java)
-        self.assertIn("isMyBoyInstalled()", self.java)
-        self.assertIn("getPackageInfo(MYBOY_PACKAGE", self.java)
-        self.assertIn("FLAG_GRANT_READ_URI_PERMISSION", self.java)
-        self.assertIn("ClipData.newUri", self.java)
-        self.assertIn('setPackage(MYBOY_PACKAGE)', self.java)
+    def test_myboy_mode_uses_embedded_mgba_without_external_app(self):
+        self.assertIn('openRomInMyBoy(String value, String quality, String fps)', self.java)
+        self.assertIn('launchRom(Uri.parse(value), quality, fps)', self.java)
+        self.assertNotIn('MYBOY_PACKAGE', self.java)
+        self.assertNotIn('isMyBoyInstalled()', self.java)
+        self.assertIn('emulatorMode', self.html)
+        self.assertIn("selectEmulator('myboy')", self.html)
+        self.assertIn('không cần cài ứng dụng ngoài', self.html)
 
-    def test_manifest_declares_myboy_visibility_and_internet(self):
-        self.assertIn('android:name="com.fastemulator.gba"', self.manifest)
+    def test_manifest_does_not_require_external_myboy(self):
+        self.assertNotIn('com.fastemulator.gba', self.manifest)
         self.assertIn('android.permission.INTERNET', self.manifest)
 
-    def test_ui_checks_myboy_before_rom_handoff(self):
-        self.assertIn("AndroidBridge.isMyBoyInstalled()", self.html)
-        self.assertIn("launchMyBoyCurrent()", self.html)
-        self.assertIn("openRomInMyBoy(g.uri)", self.html)
+    def test_myboy_ui_routes_rom_to_internal_emulator(self):
+        self.assertIn('AndroidBridge.openRomInMyBoy(g.uri,quality,fps)', self.html)
+        self.assertIn('MY BOY! · TƯƠNG THÍCH', self.html)
+        self.assertNotIn('AndroidBridge.isMyBoyInstalled()', self.html)
 
     def test_autocheat_online_search_and_import_are_present(self):
         self.assertIn("searchCheatsOnline()", self.html)
