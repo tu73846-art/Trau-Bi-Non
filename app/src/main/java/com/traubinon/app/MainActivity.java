@@ -40,6 +40,9 @@ public class MainActivity extends Activity {
   @Override public void onCreate(Bundle state) {
     super.onCreate(state);
     getWindow().getDecorView().setSystemUiVisibility(5894 | 1024 | 512);
+    File gameStorage = getExternalFilesDir("Game Pikachu/Games");
+    if (gameStorage == null) gameStorage = new File(getFilesDir(), "Game Pikachu/Games");
+    if (!gameStorage.exists()) gameStorage.mkdirs();
     speech = new TextToSpeech(this, status -> {
       if (status == TextToSpeech.SUCCESS) {
         speechReady = true;
@@ -337,8 +340,8 @@ public class MainActivity extends Activity {
   }
 
   private void launchRom(Uri uri, String quality, String fps) {
-    File folder = getExternalFilesDir("roms");
-    if (folder == null) folder = new File(getFilesDir(), "roms");
+    File folder = getExternalFilesDir("Game Pikachu/Games");
+    if (folder == null) folder = new File(getFilesDir(), "Game Pikachu/Games");
     if (!folder.exists() && !folder.mkdirs()) {
       Toast.makeText(this, "Không tạo được thư mục ROM.", Toast.LENGTH_LONG).show();
       return;
