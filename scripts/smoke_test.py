@@ -51,7 +51,7 @@ class SmokeTests(unittest.TestCase):
         self.assertIn('android.permission.INTERNET', self.manifest)
 
     def test_myboy_ui_routes_rom_to_internal_emulator(self):
-        self.assertRegex(self.html, r'AndroidBridge\\.openRomInMyBoy\\(g\\.uri,\\s*quality,\\s*fps\\)')
+        self.assertRegex(self.html, r'AndroidBridge\.openRomInMyBoy\(g\.uri,\s*quality,\s*fps\)')
         self.assertIn('MY BOY! · TƯƠNG THÍCH', self.html)
         self.assertNotIn('AndroidBridge.isMyBoyInstalled()', self.html)
 
@@ -59,7 +59,7 @@ class SmokeTests(unittest.TestCase):
         self.assertIn("searchCheatsOnline()", self.html)
         self.assertIn("downloadCheatFile(", self.html)
         self.assertIn("parseLibretroCheatFile(", self.html)
-        self.assertRegex(self.html, r"enabled\\s*:\\s*false")
+        self.assertRegex(self.html, r"enabled\s*:\s*false")
 
     def test_external_gamepad_support_and_discovery(self):
         self.assertIn('getConnectedControllers()', self.java)
@@ -75,7 +75,7 @@ class SmokeTests(unittest.TestCase):
         self.assertIn("KEYCODE_BUTTON_R1", emulator)
         self.assertIn("KEYCODE_BUTTON_L1", emulator)
         self.assertIn("rom_library_json", self.java)
-        self.assertRegex(self.html, r"setGameLibrary\\(JSON\\.stringify\\(games\\),\\s*index\\)")
+        self.assertRegex(self.html, r"setGameLibrary\(JSON\.stringify\(games\),\s*index\)")
 
     def test_automatic_game_text_translation_overlay(self):
         emulator = (ROOT / "app/src/main/java/org/libsdl/app/EmulatorActivity.java").read_text()
