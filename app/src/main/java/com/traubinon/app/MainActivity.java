@@ -15,6 +15,9 @@ import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebChromeClient;
 import android.widget.Toast;
+import android.speech.tts.TextToSpeech;
+import android.speech.tts.Voice;
+import java.util.Locale;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
@@ -25,10 +28,18 @@ public class MainActivity extends Activity {
   private static final int PICK_ROM = 410;
   private static final int PICK_ROM_FOLDER = 411;
   private WebView web;
+  private TextToSpeech speech;
+  private boolean speechReady = false;
 
   @Override public void onCreate(Bundle state) {
     super.onCreate(state);
     getWindow().getDecorView().setSystemUiVisibility(5894 | 1024 | 512);
+    speech = new TextToSpeech(this, status -> {
+      if (status == TextToSpeech.SUCCESS) {
+        speechReady = true;
+        speech.setLanguage(new Locale("vi", "VN"));
+      }
+    });
     web = new WebView(this);
     WebSettings s = web.getSettings();
     s.setJavaScriptEnabled(true);
@@ -40,7 +51,44 @@ public class MainActivity extends Activity {
     web.loadUrl("file:///android_asset/index.html");
   }
 
+  private void speakVietnamese(String text, boolean animeVoice) {
+    if (speech == null || !speechReady || text == null || text.trim().isEmpty()) return;
+    String clean = text.trim();
+    if (clean.length() > 1800) clean = clean.substring(0, 1800);
+    final String phrase = clean;
+    runOnUiThread(() -> {
+      if (speech == null || !speechReady) return;
+      speech.stop();
+      speech.setLanguage(new Locale("vi", "VN"));
+      if (animeVoice) {
+        speech.setPitch(1.28f);
+        speech.setSpeechRate(0.92f);
+        try {
+          for (Voice voice : speech.getVoices()) {
+            if (voice != null && voice.getLocale() != null
+                && voice.getLocale().getLanguage().equals("vi")
+                && voice.getName().toLowerCase(Locale.ROOT).matches(".*(female|woman|girl|nu|linh|mai).*")) {
+              speech.setVoice(voice);
+              break;
+            }
+          }
+        } catch (Exception ignored) { }
+      } else {
+        speech.setPitch(1.0f);
+        speech.setSpeechRate(1.0f);
+      }
+      speech.speak(phrase, TextToSpeech.QUEUE_FLUSH, null, "trau-bi-non-ai");
+    });
+  }
+
   private class Bridge {
+    @JavascriptInterface public void speakText(String text, boolean animeVoice) {
+      speakVietnamese(text, animeVoice);
+    }
+    @JavascriptInterface public void stopSpeaking() {
+      runOnUiThread(() -> { if (speech != null) speech.stop(); });
+    }
+
     @JavascriptInterface public void pickRom() {
       runOnUiThread(() -> {
         Intent i = new Intent(Intent.ACTION_OPEN_DOCUMENT);
@@ -248,6 +296,15 @@ public class MainActivity extends Activity {
       if (backup.exists() && !target.exists()) backup.renameTo(target);
       Toast.makeText(this, "Không mở được ROM: " + e.getMessage(), Toast.LENGTH_LONG).show();
     }
+  }
+
+  @Override protected void onDestroy() {
+    if (speech != null) {
+      speech.stop();
+      speech.shutdown();
+      speech = null;
+    }
+    super.onDestroy();
   }
 
   @Override protected void onActivityResult(int requestCode, int resultCode, Intent data) {
