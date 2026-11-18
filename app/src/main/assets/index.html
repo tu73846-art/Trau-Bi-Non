@@ -66,9 +66,30 @@ main.game-change-prev{animation:gameSlidePrev .24s ease-out}
 @keyframes gameSlideNext{from{opacity:.45;transform:translateX(-22px)}to{opacity:1;transform:translateX(0)}}
 @keyframes gameSlidePrev{from{opacity:.45;transform:translateX(22px)}to{opacity:1;transform:translateX(0)}}
 @media(prefers-reduced-motion:reduce){main.game-change-next,main.game-change-prev{animation:none}}
+
+/* Bàn phím gaming riêng cho ô tìm kiếm game */
+#searchbar{max-height:88dvh;overflow-y:auto;overscroll-behavior:contain}
+#searchInput{cursor:default;user-select:none;-webkit-user-select:none}
+#gameKeyboard{margin-top:7px;padding:5px;background:#06121b;border:1px solid #17677c;border-radius:9px}
+.gameKeyRow{display:flex;justify-content:center;gap:3px;margin:3px 0}
+.gameKeyRow button{flex:1;min-width:0;min-height:34px;padding:3px 1px;font-size:clamp(10px,2.8vw,14px);border-radius:6px}
+.gameKeyRow button:focus{outline:2px solid #42f5bd;background:#07506a;box-shadow:0 0 8px #19dcff;}
+.gameKeyActions{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;margin-top:6px}
+.gameKeyActions button{min-width:0;min-height:32px;padding:4px 2px;font-size:10px}
+@media(max-width:380px){.gameKeyRow{gap:2px}.gameKeyRow button{min-height:30px;font-size:10px}.gameKeyActions button{font-size:9px;min-height:30px}}
 </style></head><body>
 <header><span>🐃 TRÂU BI NON</span><span><button id="aiToggle" type="button" aria-pressed="false" onclick="toggleAIAssistant()"><i class="ai-dot"></i><span id="aiToggleText">AI · TẮT</span></button> <button onclick="toggleSearch()">⌕ TÌM</button> <button onclick="toggleMenu()">⋮</button></span></header>
-<div id="searchbar"><input id="searchInput" placeholder="Nhập tên game để tìm..." oninput="renderGames()"><div id="searchResults"></div><button onclick="toggleSearch()">ĐÓNG</button></div>
+<div id="searchbar">
+ <input id="searchInput" placeholder="Chọn chữ bên dưới để tìm game..." readonly aria-label="Tên game tìm kiếm">
+ <div id="gameKeyboard" aria-label="Bàn phím tìm kiếm">
+  <div class="gameKeyRow"><button data-key="1">1</button><button data-key="2">2</button><button data-key="3">3</button><button data-key="4">4</button><button data-key="5">5</button><button data-key="6">6</button><button data-key="7">7</button><button data-key="8">8</button><button data-key="9">9</button><button data-key="0">0</button></div>
+  <div class="gameKeyRow"><button data-key="Q">Q</button><button data-key="W">W</button><button data-key="E">E</button><button data-key="R">R</button><button data-key="T">T</button><button data-key="Y">Y</button><button data-key="U">U</button><button data-key="I">I</button><button data-key="O">O</button><button data-key="P">P</button></div>
+  <div class="gameKeyRow"><button data-key="A">A</button><button data-key="S">S</button><button data-key="D">D</button><button data-key="F">F</button><button data-key="G">G</button><button data-key="H">H</button><button data-key="J">J</button><button data-key="K">K</button><button data-key="L">L</button></div>
+  <div class="gameKeyRow"><button data-key="Z">Z</button><button data-key="X">X</button><button data-key="C">C</button><button data-key="V">V</button><button data-key="B">B</button><button data-key="N">N</button><button data-key="M">M</button><button data-key=" ">␠</button><button data-key="BACK">⌫</button></div>
+  <div class="gameKeyActions"><button onclick="moveGameKey(-1,0)">←</button><button onclick="moveGameKey(0,-1)">↑</button><button onclick="moveGameKey(0,1)">↓</button><button onclick="moveGameKey(1,0)">→</button><button class="green" onclick="selectGameKey()">A · CHỌN</button><button class="red" onclick="deleteGameKey()">B · XÓA</button><button onclick="clearGameSearch()">XÓA HẾT</button><button onclick="submitGameSearch()">TÌM</button></div>
+ </div>
+ <div id="searchResults"></div><button onclick="toggleSearch()">ĐÓNG</button>
+</div>
 <div id="menu"><button onclick="pickRom()">＋ Thêm game / ROM</button><button onclick="pickRomFolder()">▣ Quét thư mục game trong bộ nhớ</button><button onclick="openWallpaperPanel()">🖼 Hình nền giao diện chính</button><button onclick="openPanel('library')">▤ Thư viện game</button><button onclick="openPanel('controls')">⌖ Cài nút điều khiển</button><button onclick="openPanel('controller')">🎮 Tay cầm Bluetooth / OTG</button><button onclick="openPanel('graphics')">◈ Đồ họa & FPS</button><button onclick="openPanel('saves')">▣ Ô lưu game</button><button onclick="openPanel('cheats')">⚡ AutoCheat · Kho mã</button><button onclick="openPanel('network')">⇄ Chơi Online / Offline</button><button onclick="openPanel('ai')">🤖 Trợ lí AI · Giới tính</button><button onclick="openBackupPanel()">▣ Sao lưu / Khôi phục</button><button onclick="openMyBoy()">▶ Mở My Boy!</button></div>
 <main><div class="tile" id="prev" onclick="shift(-1)">TRƯỚC</div><div class="tile big" id="current">CHƯA CÓ GAME<small>Thêm ROM để bắt đầu</small></div><div class="tile" id="next" onclick="shift(1)">TIẾP</div></main>
 <div class="actions"><button onclick="pickRom()">＋ THÊM GAME</button><button onclick="launchCurrent()">▶ CHẠY GAME</button><button onclick="openMyBoy()">MY BOY!</button></div>
@@ -150,7 +171,53 @@ function offlineGameAnswer(question){
 }
 function sendAIOffline(){const input=$('aiQuestion');if(!input)return;const question=input.value.trim();if(!question)return;addAIMessage(question,'user');input.value='';addAIMessage(offlineGameAnswer(question),'bot');}
 
-function toggleSearch(){ $('searchbar').style.display=$('searchbar').style.display==='block'?'none':'block';if($('searchbar').style.display==='block')$('searchInput').focus();else{$('searchInput').value='';renderGames()}}
+let gameKeyRow=0,gameKeyCol=0;
+function gameKeyButtons(){return [...document.querySelectorAll('#gameKeyboard .gameKeyRow button')];}
+function focusGameKey(row,col){
+ const rows=[...document.querySelectorAll('#gameKeyboard .gameKeyRow')];
+ if(!rows.length)return;
+ gameKeyRow=Math.max(0,Math.min(rows.length-1,row));
+ const keys=[...rows[gameKeyRow].querySelectorAll('button')];
+ gameKeyCol=Math.max(0,Math.min(keys.length-1,col));
+ keys[gameKeyCol]?.focus();
+}
+function moveGameKey(dx,dy){
+ const rows=[...document.querySelectorAll('#gameKeyboard .gameKeyRow')];
+ if(!rows.length)return;
+ const nextRow=Math.max(0,Math.min(rows.length-1,gameKeyRow+dy));
+ const nextCol=Math.max(0,Math.min(rows[nextRow].querySelectorAll('button').length-1,gameKeyCol+dx));
+ focusGameKey(nextRow,nextCol);
+}
+function selectGameKey(){
+ const key=document.activeElement?.dataset?.key;
+ if(!key){focusGameKey(gameKeyRow,gameKeyCol);return}
+ if(key==='BACK'){deleteGameKey();return}
+ const input=$('searchInput');input.value+=key;renderGames();
+}
+function deleteGameKey(){const input=$('searchInput');input.value=input.value.slice(0,-1);renderGames()}
+function clearGameSearch(){$('searchInput').value='';renderGames();focusGameKey(1,0)}
+function submitGameSearch(){renderGames();$('searchResults')?.scrollIntoView({block:'nearest'});}
+document.addEventListener('click',e=>{
+ const key=e.target.closest('#gameKeyboard button[data-key]');
+ if(!key)return;
+ const rows=[...document.querySelectorAll('#gameKeyboard .gameKeyRow')];
+ gameKeyRow=rows.findIndex(row=>row.contains(key));
+ gameKeyCol=[...rows[gameKeyRow].querySelectorAll('button')].indexOf(key);
+});
+document.addEventListener('keydown',e=>{
+ if($('searchbar')?.style.display!=='block')return;
+ if(!['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Enter','Backspace'].includes(e.key))return;
+ if(e.target?.id==='searchInput'||e.target?.closest?.('#gameKeyboard')){
+  e.preventDefault();
+  if(e.key==='ArrowLeft')moveGameKey(-1,0);
+  else if(e.key==='ArrowRight')moveGameKey(1,0);
+  else if(e.key==='ArrowUp')moveGameKey(0,-1);
+  else if(e.key==='ArrowDown')moveGameKey(0,1);
+  else if(e.key==='Enter')selectGameKey();
+  else if(e.key==='Backspace')deleteGameKey();
+ }
+});
+function toggleSearch(){ $('searchbar').style.display=$('searchbar').style.display==='block'?'none':'block';if($('searchbar').style.display==='block'){focusGameKey(1,0)}else{$('searchInput').value='';renderGames()}}
 function pickRom(){ $('menu').style.display='none';if(window.AndroidBridge)AndroidBridge.pickRom();else alert('Chọn ROM cần chạy trên bản Android.')}
 function pickRomFolder(){ $('menu').style.display='none';if(window.AndroidBridge&&AndroidBridge.pickRomFolder)AndroidBridge.pickRomFolder();else alert('Quét thư mục cần chạy trên bản Android.')}
 function addGamesFromAndroid(payload){try{const items=JSON.parse(String(payload||'[]'));let added=0;for(const item of items){const name=String(item.name||'').trim().slice(0,180),uri=String(item.uri||'').trim();if(!name||!uri||games.some(g=>g.uri===uri))continue;games.push({name,uri});added++;}if(added&&!persist()){renderGames();return;}index=Math.max(0,games.length-1);renderGames();$('hint').textContent=added?'Đã thêm '+added+' game từ thư mục bộ nhớ.':'Không tìm thấy game mới trong thư mục đã chọn.';}catch(e){$('hint').textContent='Không đọc được danh sách game: '+e.message;}}
