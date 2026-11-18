@@ -1,5 +1,5 @@
 name: Build Trau Bi Non APK
-# Rebuild after JavaScript smoke-test fix
+# Build and validate the latest Android APK
 on:
   workflow_dispatch:
   push:
