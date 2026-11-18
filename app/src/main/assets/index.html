@@ -126,6 +126,24 @@ function syncAIAssistantButton(){
  label.textContent=aiAssistantEnabled?'AI · BẬT':'AI · TẮT';
 }
 
+let aiSpeechMode=safeLoad('aiSpeechMode','anime');
+if(!['anime','chat'].includes(aiSpeechMode))aiSpeechMode='anime';
+function setAISpeechMode(mode){
+ if(!['anime','chat'].includes(mode))return;
+ aiSpeechMode=mode;saveLocal('aiSpeechMode',mode);
+ $('aiAnimeMode')?.classList.toggle('active',mode==='anime');
+ $('aiChatMode')?.classList.toggle('active',mode==='chat');
+ const status=$('aiModeStatus');
+ if(status)status.textContent=mode==='anime'?'AI sẽ tự đọc câu trả lời bằng giọng nữ hoạt hình.':'AI hiển thị tin nhắn; bấm ĐỌC trên từng câu trả lời để nghe.';
+ if(mode!=='anime'&&window.AndroidBridge?.stopSpeaking)AndroidBridge.stopSpeaking();
+}
+function speakAIText(text,anime){
+ if(window.AndroidBridge&&AndroidBridge.speakText)AndroidBridge.speakText(String(text||''),!!anime);
+ else if('speechSynthesis' in window){
+  const utterance=new SpeechSynthesisUtterance(String(text||''));utterance.lang='vi-VN';
+  utterance.pitch=anime?1.28:1;utterance.rate=anime?0.92:1;window.speechSynthesis.cancel();window.speechSynthesis.speak(utterance);
+ }
+}
 let aiAssistantGender=safeLoad('aiAssistantGender','female');
 if(!['female','male'].includes(aiAssistantGender))aiAssistantGender='female';
 function setAIGender(gender){
@@ -146,7 +164,19 @@ function toggleAIAssistant(){
 }
 
 
-function addAIMessage(message,kind){const box=$('aiMessages');if(!box)return;const item=document.createElement('div');item.className='aiMsg '+(kind==='user'?'user':'bot');item.textContent=message;box.appendChild(item);box.scrollTop=box.scrollHeight;}
+function addAIMessage(message,kind){
+ const box=$('aiMessages');if(!box)return;
+ const item=document.createElement('div');item.className='aiMsg '+(kind==='user'?'user':'bot');
+ const label=document.createElement('span');label.textContent=message;item.appendChild(label);
+ if(kind!=='user'){
+  if(aiSpeechMode==='chat'){
+   const read=document.createElement('button');read.type='button';read.textContent='🔊 ĐỌC';
+   read.style.cssText='display:block;margin-top:6px;min-height:27px;padding:3px 9px;font-size:10px';
+   read.addEventListener('click',()=>speakAIText(message,false));item.appendChild(read);
+  } else {speakAIText(message,true);}
+ }
+ box.appendChild(item);box.scrollTop=box.scrollHeight;return item;
+}
 function askAIOffline(question){const input=$('aiQuestion');if(input)input.value=question;sendAIOffline();}
 function normalizeAIGuideText(value){return String(value||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d');}
 function offlineGameAnswer(question){
@@ -265,13 +295,13 @@ if(which==='graphics'){b.innerHTML='<h3>ĐỒ HỌA & FPS</h3><label>Chế độ
 if(which==='saves'){b.innerHTML='<h3>Ô LƯU TRẠNG THÁI GAME</h3><p class="muted">Hỗ trợ tối đa 9999 ô save-state thật của lõi mGBA (giới hạn bởi dung lượng bộ nhớ). Khi đang chơi, chạm SLOT để chuyển ô 1–9999, SAVE để lưu và LOAD để khôi phục. Mỗi game có tệp lưu riêng trong bộ nhớ ứng dụng.</p><button onclick="closePanel();launchCurrent()">▶ MỞ GAME ĐỂ LƯU / TẢI</button><p class="muted">Không gỡ dữ liệu ứng dụng nếu muốn giữ các ô lưu. Nên sao lưu tiến trình quan trọng.</p>'}
 if(which==='ai'){
  b.innerHTML=`<h3>🤖 TRỢ LÍ HƯỚNG DẪN GAME</h3><p class="muted">Chạy ngoại tuyến. Tập trung hướng dẫn cách chơi, tìm và lấy vật phẩm, nhiệm vụ và cách qua màn. Câu trả lời dựa trên hướng dẫn có sẵn, không phải AI tạo sinh.</p>
- <div class="keys"><button id="aiFemale" onclick="setAIGender('female')">♀ NỮ</button><button id="aiMale" onclick="setAIGender('male')">♂ NAM</button></div>
- <p id="aiGenderStatus" class="muted">Đang chọn: ${aiAssistantGender==='female'?'NỮ':'NAM'}</p>
+ <div class="keys"><button id="aiAnimeMode" onclick="setAISpeechMode('anime')">🎀 AI GIỌNG ANIME</button><button id="aiChatMode" onclick="setAISpeechMode('chat')">💬 CHAT + ĐỌC</button></div>
+ <p id="aiModeStatus" class="muted">Chọn một trong hai chế độ AI.</p>
  <div id="aiChat"><div id="aiMessages" aria-live="polite"><div class="aiMsg bot">Mình có thể chỉ cách chơi, cách tìm vật phẩm và mẹo qua màn. Game đang chọn: ${escapeHtml(games[index]?.name||'Chưa chọn game')}. Hãy nhập câu hỏi bên dưới.</div></div>
  <div class="aiComposer"><input id="aiQuestion" placeholder="VD: Lấy chìa khóa ở đâu?" onkeydown="if(event.key==='Enter')sendAIOffline()"><button onclick="sendAIOffline()">GỬI</button></div>
  <div class="keys"><button onclick="askAIOffline('Cách chơi game này?')">CÁCH CHƠI</button><button onclick="askAIOffline('Cách tìm và lấy vật phẩm?')">LẤY VẬT PHẨM</button><button onclick="askAIOffline('Cách qua màn này?')">QUA MÀN</button></div></div>
  <p class="muted">Chưa có dữ liệu bản đồ riêng cho mọi game; hãy ghi tên vật phẩm hoặc màn chơi để được hướng dẫn theo thông tin sẵn có.</p>`;
- let female=$('aiFemale'),male=$('aiMale');if(female)female.classList.toggle('active',aiAssistantGender==='female');if(male)male.classList.toggle('active',aiAssistantGender==='male');
+ setAISpeechMode(aiSpeechMode);
 }
 if(which==='network'){b.innerHTML='<h3>⇄ CHƠI ONLINE / OFFLINE</h3><p><b>OFFLINE · Một người chơi</b></p><p class="muted">Không cần Internet hoặc Wi-Fi. Chạy game trực tiếp trên máy này bằng lõi GBA tích hợp. Có thể chọn giao diện chế độ mGBA hoặc My Boy! tương thích.</p><button onclick="closePanel();launchCurrent()">▶ CHƠI OFFLINE · mGBA</button><button onclick="closePanel();launchMyBoyCurrent()">▶ CHƠI OFFLINE · MY BOY!</button><hr style="border-color:#17485a"><p><b>ONLINE · Hai điện thoại</b></p><p class="muted">Chế độ Link Remote qua hai điện thoại chưa được tích hợp trong bản một APK này.</p><p><b>Wi-Fi / Điểm phát sóng</b></p><div class="keys"><button class="green" onclick="launchOnline(\'server\',\'wifi\')">MÁY CHỦ</button><button class="blue" onclick="launchOnline(\'client\',\'wifi\')">THAM GIA</button></div><p class="muted">Máy chủ: Menu → Link Remote → Wi-Fi Server. Máy tham gia: Menu → Link Remote → Wi-Fi Client, nhập IP/port do máy chủ hiển thị. Hai máy cùng Wi-Fi hoặc một máy phát hotspot.</p><p><b>Bluetooth</b></p><div class="keys"><button class="green" onclick="launchOnline(\'server\',\'bluetooth\')">MÁY CHỦ</button><button class="blue" onclick="launchOnline(\'client\',\'bluetooth\')">THAM GIA</button></div><p class="muted">Ghép đôi Bluetooth trước. Trong My Boy!, chọn Bluetooth Server ở máy chủ và Bluetooth Client ở máy còn lại.</p><p class="muted">Sau khi kết nối, vào chế độ Link/Cable trong game nếu trò chơi hỗ trợ. Trâu Bi Non sẽ mở đúng ROM trong My Boy!; việc bật Server/Client và ghép nối vẫn phải thực hiện trong My Boy! vì ứng dụng không có API công khai để điều khiển các mục đó. Đây là Link Remote qua mạng cục bộ, không phải ghép trận qua Internet.</p>'}
 if(which==='cheats'){let active=games[index]?.name||'';b.innerHTML='<h3>⚡ AUTOCHEAT · '+(active?escapeHtml(active):'KHO MÃ')+'</h3><p class="muted">Game đang chọn: '+(active?escapeHtml(active):'Chưa chọn game')+'</p><input id="cheatGame" placeholder="Tên game" value="'+escapeHtml(active)+'"><input id="cheatName" placeholder="Tên cheat"><input id="cheatCode" placeholder="Mã cheat"><button onclick="addCheat()">＋ LƯU CHEAT</button><button onclick="document.getElementById(&quot;cheatImport&quot;).click()">NHẬP TỆP .TXT / .CHT</button><button onclick="exportCheats()">XUẤT JSON</button><button onclick="exportCheatCht()">XUẤT .CHT</button><button onclick="searchCheatsOnline()">TÌM CHEAT TRÊN MẠNG</button><button onclick="copyAllCurrentCheats()">SAO CHÉP MÃ GAME NÀY</button><button onclick="applyCheatsAndLaunch()">LƯU CHEAT VÀ CHẠY mGBA</button><button onclick="openMyBoyWithCheats()">MỞ MY BOY!</button><div id="cheatList"></div><div id="onlineCheatResults"></div><p class="muted">Kho mã trực tuyến: Libretro Database (CC-BY-SA-4.0). Mã tải về sẽ mặc định TẮT để bạn chọn trước khi áp dụng. Hãy kiểm tra đúng phiên bản game/khu vực.</p>'}
