@@ -127,14 +127,18 @@ function syncAIAssistantButton(){
 }
 
 let aiSpeechMode=safeLoad('aiSpeechMode','anime');
-if(!['anime','chat'].includes(aiSpeechMode))aiSpeechMode='anime';
+if(!['anime','chat','online'].includes(aiSpeechMode))aiSpeechMode='anime';
+let aiOnlineEndpoint=safeLoad('aiOnlineEndpoint','');
+let aiOnlineHistory=[];
+function saveAIEndpoint(){const field=$('aiEndpoint');if(!field)return;aiOnlineEndpoint=field.value.trim().replace(/\\/$/,'');saveLocal('aiOnlineEndpoint',aiOnlineEndpoint);const note=$('aiEndpointStatus');if(note)note.textContent=aiOnlineEndpoint?'Đã lưu địa chỉ máy chủ trên thiết bị.':'Chưa cài địa chỉ máy chủ AI.';}
 function setAISpeechMode(mode){
- if(!['anime','chat'].includes(mode))return;
+ if(!['anime','chat','online'].includes(mode))return;
  aiSpeechMode=mode;saveLocal('aiSpeechMode',mode);
  $('aiAnimeMode')?.classList.toggle('active',mode==='anime');
  $('aiChatMode')?.classList.toggle('active',mode==='chat');
+ $('aiOnlineMode')?.classList.toggle('active',mode==='online');
  const status=$('aiModeStatus');
- if(status)status.textContent=mode==='anime'?'AI sẽ tự đọc câu trả lời bằng giọng nữ hoạt hình.':'AI hiển thị tin nhắn; bấm ĐỌC trên từng câu trả lời để nghe.';
+ if(status)status.textContent=mode==='anime'?'AI sẽ tự đọc câu trả lời bằng giọng nữ hoạt hình.':mode==='chat'?'AI hiển thị tin nhắn ngoại tuyến; bấm ĐỌC để nghe.':'AI Chat trực tuyến: cần địa chỉ máy chủ do người quản lý ứng dụng cấu hình.';
  if(mode!=='anime'&&window.AndroidBridge?.stopSpeaking)AndroidBridge.stopSpeaking();
 }
 function speakAIText(text,anime){
@@ -200,7 +204,8 @@ function offlineGameAnswer(question){
  if(/(xin chao|hello|chao)/.test(q))return 'Chào bạn! Mình chuyên hướng dẫn cách chơi và cách tìm/lấy vật phẩm trong game.';
  return 'Mình đang hỗ trợ '+game+'. Bạn có thể hỏi: “Cách chơi game này?”, “Lấy '+ 'vật phẩm ở đâu?”, “Cách qua màn này?” hoặc ghi tên vật phẩm/nhiệm vụ. Hướng dẫn ngoại tuyến có giới hạn nếu chưa có dữ liệu riêng của game.';
 }
-function sendAIOffline(){const input=$('aiQuestion');if(!input)return;const question=input.value.trim();if(!question)return;addAIMessage(question,'user');input.value='';addAIMessage(offlineGameAnswer(question),'bot');}
+function sendAIOffline(){const input=$('aiQuestion');if(!input)return;const question=input.value.trim();if(!question)return;if(aiSpeechMode==='online'){sendAIOnline();return;}addAIMessage(question,'user');input.value='';addAIMessage(offlineGameAnswer(question),'bot');}
+async function sendAIOnline(){const input=$('aiQuestion');if(!input)return;const message=input.value.trim();if(!message)return;input.value='';addAIMessage(message,'user');if(!aiOnlineEndpoint){addAIMessage('Chưa kết nối máy chủ AI. Hãy nhập địa chỉ máy chủ trong mục CÀI ĐẶT AI. Không nhập khóa API vào đây.','bot');return;}const pending=addAIMessage('Đang kết nối AI…','bot');const send=$('aiSendButton');if(send)send.disabled=true;try{const response=await fetch(aiOnlineEndpoint+'/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message,history:aiOnlineHistory.slice(-12),game:games[index]?.name||''})});const data=await response.json();if(!response.ok)throw new Error(data.error||'Máy chủ trả về lỗi '+response.status);const answer=String(data.reply||'').trim();if(!answer)throw new Error('AI chưa trả lời.');pending.querySelector('span').textContent=answer;aiOnlineHistory.push({role:'user',content:message},{role:'assistant',content:answer});if(aiOnlineHistory.length>16)aiOnlineHistory=aiOnlineHistory.slice(-16);if(aiSpeechMode==='chat') {const read=document.createElement('button');read.type='button';read.textContent='🔊 ĐỌC';read.style.cssText='display:block;margin-top:6px;min-height:27px;padding:3px 9px;font-size:10px';read.addEventListener('click',()=>speakAIText(answer,false));pending.appendChild(read);}else if(aiSpeechMode==='anime')speakAIText(answer,true);}catch(error){pending.querySelector('span').textContent='Không kết nối được AI: '+(error.message||'Lỗi mạng')+'. Kiểm tra Internet và địa chỉ máy chủ.';}finally{if(send)send.disabled=false;}}
 
 let gameKeyRow=0,gameKeyCol=0,focusedGameKey=null;
 function gameKeyButtons(){return [...document.querySelectorAll('#gameKeyboard .gameKeyRow button')];}
@@ -295,10 +300,11 @@ if(which==='graphics'){b.innerHTML='<h3>ĐỒ HỌA & FPS</h3><label>Chế độ
 if(which==='saves'){b.innerHTML='<h3>Ô LƯU TRẠNG THÁI GAME</h3><p class="muted">Hỗ trợ tối đa 9999 ô save-state thật của lõi mGBA (giới hạn bởi dung lượng bộ nhớ). Khi đang chơi, chạm SLOT để chuyển ô 1–9999, SAVE để lưu và LOAD để khôi phục. Mỗi game có tệp lưu riêng trong bộ nhớ ứng dụng.</p><button onclick="closePanel();launchCurrent()">▶ MỞ GAME ĐỂ LƯU / TẢI</button><p class="muted">Không gỡ dữ liệu ứng dụng nếu muốn giữ các ô lưu. Nên sao lưu tiến trình quan trọng.</p>'}
 if(which==='ai'){
  b.innerHTML=`<h3>🤖 TRỢ LÍ HƯỚNG DẪN GAME</h3><p class="muted">Chạy ngoại tuyến. Tập trung hướng dẫn cách chơi, tìm và lấy vật phẩm, nhiệm vụ và cách qua màn. Câu trả lời dựa trên hướng dẫn có sẵn, không phải AI tạo sinh.</p>
- <div class="keys"><button id="aiAnimeMode" onclick="setAISpeechMode('anime')">🎀 AI GIỌNG ANIME</button><button id="aiChatMode" onclick="setAISpeechMode('chat')">💬 CHAT + ĐỌC</button></div>
- <p id="aiModeStatus" class="muted">Chọn một trong hai chế độ AI.</p>
+ <div class="keys"><button id="aiAnimeMode" onclick="setAISpeechMode('anime')">🎀 AI GIỌNG ANIME</button><button id="aiChatMode" onclick="setAISpeechMode('chat')">💬 CHAT + ĐỌC</button><button id="aiOnlineMode" onclick="setAISpeechMode('online')">🌐 AI CHAT ONLINE</button></div>
+ <p id="aiModeStatus" class="muted">Chọn chế độ AI.</p>
+ <details style="margin:8px 0"><summary>⚙ CÀI ĐẶT AI ONLINE</summary><p class="muted">Nhập URL máy chủ AI HTTPS do người quản lý cung cấp. Không nhập API key hoặc mật khẩu vào ứng dụng.</p><input id="aiEndpoint" type="url" placeholder="https://may-chu-cua-ban.example" value="${escapeHtml(aiOnlineEndpoint)}"><button type="button" onclick="saveAIEndpoint()">LƯU ĐỊA CHỈ</button><p id="aiEndpointStatus" class="muted"></p></details>
  <div id="aiChat"><div id="aiMessages" aria-live="polite"><div class="aiMsg bot">Mình có thể chỉ cách chơi, cách tìm vật phẩm và mẹo qua màn. Game đang chọn: ${escapeHtml(games[index]?.name||'Chưa chọn game')}. Hãy nhập câu hỏi bên dưới.</div></div>
- <div class="aiComposer"><input id="aiQuestion" placeholder="VD: Lấy chìa khóa ở đâu?" onkeydown="if(event.key==='Enter')sendAIOffline()"><button onclick="sendAIOffline()">GỬI</button></div>
+ <div class="aiComposer"><input id="aiQuestion" placeholder="Nhập câu hỏi..." onkeydown="if(event.key==='Enter')sendAIOffline()"><button id="aiSendButton" onclick="sendAIOffline()">GỬI</button></div>
  <div class="keys"><button onclick="askAIOffline('Cách chơi game này?')">CÁCH CHƠI</button><button onclick="askAIOffline('Cách tìm và lấy vật phẩm?')">LẤY VẬT PHẨM</button><button onclick="askAIOffline('Cách qua màn này?')">QUA MÀN</button></div></div>
  <p class="muted">Chưa có dữ liệu bản đồ riêng cho mọi game; hãy ghi tên vật phẩm hoặc màn chơi để được hướng dẫn theo thông tin sẵn có.</p>`;
  setAISpeechMode(aiSpeechMode);
