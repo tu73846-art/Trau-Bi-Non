@@ -13,7 +13,7 @@ with tempfile.TemporaryDirectory() as td:
     config = td / "babel.config.json"
     src.write_text(source, encoding="utf-8")
     subprocess.run(["npm", "install", "--prefix", str(td), "--no-audit", "--no-fund", "@babel/core", "@babel/cli", "@babel/preset-env"], check=True)
-    config.write_text(json.dumps({"presets": [["@babel/preset-env", {"targets": {"chrome": "44"}}]}), encoding="utf-8")
+    config.write_text(json.dumps({"presets": [["@babel/preset-env", {"targets": {"chrome": "44"}}]]}), encoding="utf-8")
     babel = td / "node_modules" / ".bin" / "babel"
     subprocess.run([str(babel), str(src), "--config-file", str(config), "--out-file", str(out)], check=True)
     compiled = out.read_text(encoding="utf-8")
