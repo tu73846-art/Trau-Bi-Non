@@ -208,10 +208,12 @@ public final class EmulatorActivity extends SDLActivity {
     public boolean dispatchKeyEvent(KeyEvent event) {
         if (event.getAction() == KeyEvent.ACTION_DOWN && event.getRepeatCount() == 0) {
             int code = event.getKeyCode();
-            if (code == KeyEvent.KEYCODE_VOLUME_UP || code == KeyEvent.KEYCODE_BUTTON_R1) {
+            // Keep J36 Ultra L1/R1 available to the GBA emulator as shoulder buttons.
+            // Volume keys remain the dedicated previous/next game shortcuts.
+            if (code == KeyEvent.KEYCODE_VOLUME_UP) {
                 switchGame(1); return true;
             }
-            if (code == KeyEvent.KEYCODE_VOLUME_DOWN || code == KeyEvent.KEYCODE_BUTTON_L1) {
+            if (code == KeyEvent.KEYCODE_VOLUME_DOWN) {
                 switchGame(-1); return true;
             }
         }
