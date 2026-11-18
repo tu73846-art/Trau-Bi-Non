@@ -1,0 +1,16 @@
+plugins { id 'com.android.application' }
+android {
+    namespace 'com.traubinon.animeassistant'
+    compileSdk 35
+    defaultConfig {
+        applicationId 'com.traubinon.animeassistant'
+        minSdk 21
+        targetSdk 28
+        versionCode 2
+        versionName '1.1.0-android5'
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+}
