@@ -120,6 +120,25 @@ public class MainActivity extends Activity {
     }
 
 
+    @JavascriptInterface public String getConnectedControllers() {
+      JSONArray devices = new JSONArray();
+      try {
+        for (int id : android.view.InputDevice.getDeviceIds()) {
+          android.view.InputDevice device = android.view.InputDevice.getDevice(id);
+          if (device == null || device.isVirtual()) continue;
+          int sources = device.getSources();
+          boolean gamepad = (sources & android.view.InputDevice.SOURCE_GAMEPAD) == android.view.InputDevice.SOURCE_GAMEPAD;
+          boolean joystick = (sources & android.view.InputDevice.SOURCE_CLASS_JOYSTICK) != 0;
+          boolean dpad = (sources & android.view.InputDevice.SOURCE_DPAD) == android.view.InputDevice.SOURCE_DPAD;
+          if (!gamepad && !joystick && !dpad) continue;
+          JSONObject item = new JSONObject();
+          item.put("name", device.getName()); item.put("id", id);
+          item.put("type", gamepad || joystick ? "gamepad" : "dpad");
+          devices.put(item);
+        }
+      } catch (Exception ignored) { }
+      return devices.toString();
+    }
     @JavascriptInterface public void searchCheats(String gameName) {
       runOnUiThread(() -> {
         try {
