@@ -12,6 +12,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -34,6 +37,8 @@ jobs:
           test -n "$SDKMANAGER"
           yes | "$SDKMANAGER" --sdk_root="$SDK_ROOT" --licenses >/dev/null || true
           "$SDKMANAGER" --sdk_root="$SDK_ROOT" --install "platforms;android-35" "build-tools;35.0.0" "ndk;26.3.11579264" "cmake;3.22.1"
+      - name: Make launcher compatible with Android 5.1 WebView
+        run: python3 scripts/legacy_webview.py
       - name: Run app smoke tests
         run: python3 scripts/smoke_test.py
       - name: Build debug APK
