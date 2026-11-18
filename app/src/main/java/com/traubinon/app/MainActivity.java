@@ -51,6 +51,46 @@ public class MainActivity extends Activity {
     web.loadUrl("file:///android_asset/index.html");
   }
 
+  // Route J36 Ultra hardware controls to the launcher while leaving emulator input to SDL.
+  @Override public boolean dispatchKeyEvent(android.view.KeyEvent event) {
+    int code = event.getKeyCode();
+    boolean controllerKey =
+      code == android.view.KeyEvent.KEYCODE_DPAD_UP ||
+      code == android.view.KeyEvent.KEYCODE_DPAD_DOWN ||
+      code == android.view.KeyEvent.KEYCODE_DPAD_LEFT ||
+      code == android.view.KeyEvent.KEYCODE_DPAD_RIGHT ||
+      code == android.view.KeyEvent.KEYCODE_BUTTON_A ||
+      code == android.view.KeyEvent.KEYCODE_BUTTON_B ||
+      code == android.view.KeyEvent.KEYCODE_BUTTON_X ||
+      code == android.view.KeyEvent.KEYCODE_BUTTON_Y ||
+      code == android.view.KeyEvent.KEYCODE_BUTTON_START ||
+      code == android.view.KeyEvent.KEYCODE_BUTTON_SELECT ||
+      code == android.view.KeyEvent.KEYCODE_BUTTON_L1 ||
+      code == android.view.KeyEvent.KEYCODE_BUTTON_R1;
+    if (controllerKey) {
+      if (event.getAction() == android.view.KeyEvent.ACTION_DOWN && event.getRepeatCount() == 0 && web != null) {
+        String action = null;
+        switch (code) {
+          case android.view.KeyEvent.KEYCODE_DPAD_LEFT: action = "LEFT"; break;
+          case android.view.KeyEvent.KEYCODE_DPAD_RIGHT: action = "RIGHT"; break;
+          case android.view.KeyEvent.KEYCODE_DPAD_UP: action = "UP"; break;
+          case android.view.KeyEvent.KEYCODE_DPAD_DOWN: action = "DOWN"; break;
+          case android.view.KeyEvent.KEYCODE_BUTTON_A:
+          case android.view.KeyEvent.KEYCODE_BUTTON_START: action = "CONFIRM"; break;
+          case android.view.KeyEvent.KEYCODE_BUTTON_B: action = "BACK"; break;
+          case android.view.KeyEvent.KEYCODE_BUTTON_X:
+          case android.view.KeyEvent.KEYCODE_BUTTON_L1: action = "PREVIOUS"; break;
+          case android.view.KeyEvent.KEYCODE_BUTTON_Y:
+          case android.view.KeyEvent.KEYCODE_BUTTON_R1: action = "NEXT"; break;
+          case android.view.KeyEvent.KEYCODE_BUTTON_SELECT: action = "MENU"; break;
+        }
+        if (action != null) web.evaluateJavascript("handleHardwareKey('" + action + "')", null);
+      }
+      return true;
+    }
+    return super.dispatchKeyEvent(event);
+  }
+
   private void speakVietnamese(String text, boolean animeVoice) {
     if (speech == null || !speechReady || text == null || text.trim().isEmpty()) return;
     String clean = text.trim();
